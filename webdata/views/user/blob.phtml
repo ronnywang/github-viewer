@@ -12,6 +12,7 @@ $this->params = array(
     <a href="/<?= urlencode($this->user) ?>/<?= urlencode($this->repository) ?>"><?= $this->escape($this->repository) ?></a>
 </h1>
 <hr>
+<button id="btn-import-csv">Import CSV</button>
 <pre id="blob-content" class="pre"></pre>
 
 <?= $this->partial('common/footer.phtml', $this); ?>
