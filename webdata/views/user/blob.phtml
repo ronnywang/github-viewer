@@ -13,6 +13,37 @@ $this->params = array(
 </h1>
 <hr>
 <button id="btn-import-csv">Import CSV</button>
+<?php if ($set = DataSet::findByPath($this->user, $this->repository, $this->path)){ ?>
+<table id="datagrid"></table>
+<div id="navGrid"></div>
+<script language="javascript">
+var colNames = <?= json_encode(json_Decode($set->getEAV('columns'))) ?>;
+var colModel = [];
+for (var i = 0; i < colNames.length; i ++) {
+    colModel.push({name:i, index:i, width:55});
+    colNames[i] = (i + 1) + '.' + colNames[i];
+}
+var jqGridOptions = {
+        url:'/user/getdata/<?= $set->set_id ?>',
+        datatype: "json",
+        colNames:colNames,
+        cellEdit: true,
+        colModel:colModel,
+        rowNum:100,
+        rowList:[10,15,20,25,30,35,40],
+        pager: '#navGrid',
+        sortname: '0',
+        sortorder: "asc",
+        height: '400px',
+        autowidth: true,
+        viewrecords: true,
+        caption: <?= json_encode($set->getEAV('title')) ?>
+};
+jQuery("#datagrid").jqGrid(jqGridOptions);
+jQuery("#datagrid").jqGrid('navGrid','#navGrid',{edit:true,add:true,del:true});
+</script>
+<?php } else { ?>
 <pre id="blob-content" class="pre"></pre>
+<?php } ?>
 
 <?= $this->partial('common/footer.phtml', $this); ?>
