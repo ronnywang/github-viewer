@@ -1,0 +1,17 @@
+<?php
+$this->body_class = 'user_blob';
+$this->params = array(
+    'user' => $this->user,
+    'repository' => $this->repository,
+    'path' => $this->path,
+);
+?>
+<?= $this->partial('common/header.phtml', $this); ?>
+<h1>
+    <a href="/<?= urlencode($this->user) ?>"><?= $this->escape($this->user) ?></a> /
+    <a href="/<?= urlencode($this->user) ?>/<?= urlencode($this->repository) ?>"><?= $this->escape($this->repository) ?></a>
+</h1>
+<hr>
+<pre id="blob-content" class="pre"></pre>
+
+<?= $this->partial('common/footer.phtml', $this); ?>
