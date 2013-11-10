@@ -32,7 +32,7 @@ Pix_Controller::addDispatcher(function($url){
             'user' => $terms[1],
             'repository' => $terms[2],
             'branch' => $terms[4],
-            'path' => implode('/', array_slice($terms, 4)),
+            'path' => implode('/', array_slice($terms, 5)),
         ));
     }
 
@@ -40,7 +40,8 @@ Pix_Controller::addDispatcher(function($url){
         return array('user', 'tree', array(
             'user' => $terms[1],
             'repository' => $terms[2],
-            'path' => implode('/', array_slice($terms, 4)),
+            'branch' => $terms[4],
+            'path' => implode('/', array_slice($terms, 5)),
         ));
     }
 
