@@ -3,4 +3,45 @@
 include(__DIR__ . '/webdata/init.inc.php');
 
 Pix_Controller::addCommonHelpers();
+Pix_Controller::addDispatcher(function($url){
+    list($uri, $params) = explode('&', $url, 2);
+    $terms = explode('/', $uri);
+
+    if (!$terms[2]) {
+        # /ronnywang
+        return array('user', 'index', array(
+            'user' => $terms[1],
+        ));
+    }
+
+    if (!$terms[3]) {
+        # /ronnywang/repo
+        return array('user', 'repo', array(
+            'user' =>$terms[1], 
+            'repository' => $terms[2],
+            'path' => '',
+        ));
+    }
+
+    # ronnywang/maps.nlsc.gov.tw/blob/master/landmark/country/a.csv
+    if ($terms[3] == 'blob') {
+        return array('user', 'blob', array(
+            'user' => $terms[1],
+            'repository' => $terms[2],
+            'branch' => $terms[4],
+            'path' => implode('/', array_slice($terms, 4)),
+        ));
+    }
+
+    if ($terms[3] == 'tree') {
+        return array('user', 'repo', array(
+            'user' => $terms[1],
+            'repository' => $terms[2],
+            'path' => implode('/', array_slice($terms, 4)),
+        ));
+    }
+
+    return null;
+
+});
 Pix_Controller::dispatch(__DIR__ . '/webdata/');
