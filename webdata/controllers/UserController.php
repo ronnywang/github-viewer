@@ -60,7 +60,19 @@ class UserController extends Pix_Controller
             return $this->json(array('message' => 'failed', 'error' => 1));
         }
 
-        $content = base64_decode($ret->content);
+        if ($ret->content) {
+            $content = base64_decode($ret->content);
+        } else {
+            $url = $ret->git_url;
+            $curl = curl_init($url);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            $ret = curl_exec($curl);
+
+            if (!$ret = json_decode($ret)) {
+                return $this->json(array('message' => 'failed', 'error' => 1));
+            }
+            $content = base64_decode($ret->content);
+        }
         $fp = fopen('php://temp', 'r+');
         fputs($fp, $content);
         rewind($fp);
