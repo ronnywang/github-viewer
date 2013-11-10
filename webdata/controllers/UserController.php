@@ -15,7 +15,7 @@ class UserController extends Pix_Controller
         $this->view->path = $params['path'];
     }
 
-    public function repoAction($params)
+    public function treeAction($params)
     {
         $this->view->user = $params['user'];
         $this->view->repository = $params['repository'];

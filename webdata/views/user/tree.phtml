@@ -1,0 +1,16 @@
+<?php
+$this->body_class = 'user_repo';
+$this->params = array(
+    'user' => $this->user,
+    'repository' => $this->repository,
+    'path' => $this->path,
+);
+?>
+<?= $this->partial('common/header.phtml', $this); ?>
+<h1>
+    <a href="/<?= urlencode($this->user) ?>"><?= $this->escape($this->user) ?></a>
+</h1>
+<hr>
+<table class="table" id="file-table">
+</table>
+<?= $this->partial('common/footer.phtml', $this); ?>
