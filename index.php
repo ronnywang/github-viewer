@@ -7,6 +7,9 @@ Pix_Controller::addDispatcher(function($url){
     list($uri, $params) = explode('&', $url, 2);
     $terms = explode('/', $uri);
 
+    if (in_array($terms[1], array('user'))) {
+        return;
+    }
     if (!$terms[2]) {
         # /ronnywang
         return array('user', 'index', array(
@@ -15,8 +18,8 @@ Pix_Controller::addDispatcher(function($url){
     }
 
     if (!$terms[3]) {
-        # /ronnywang/repo
-        return array('user', 'repo', array(
+        # /ronnywang/[some repo]
+        return array('user', 'tree', array(
             'user' =>$terms[1], 
             'repository' => $terms[2],
             'path' => '',
@@ -34,7 +37,7 @@ Pix_Controller::addDispatcher(function($url){
     }
 
     if ($terms[3] == 'tree') {
-        return array('user', 'repo', array(
+        return array('user', 'tree', array(
             'user' => $terms[1],
             'repository' => $terms[2],
             'path' => implode('/', array_slice($terms, 4)),
