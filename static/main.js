@@ -6,7 +6,7 @@ main.onload_user_index = function(){
     var li_dom;
     for (var i = 0; i < ret.data.length; i ++){
        li_dom = $('<li></li>');
-       li_dom.append($('<a></a>').attr('href', ret.data[i].full_name).text(ret.data[i].full_name));
+       li_dom.append($('<a></a>').attr('href', '/' + ret.data[i].full_name).text(ret.data[i].full_name));
        $('#repo-list').append(li_dom);
     }
   }, 'jsonp');
