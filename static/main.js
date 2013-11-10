@@ -16,9 +16,6 @@ main.onload_user_tree = function(){
 
       $('#file-table').append(tr_dom);
     }
-    
-    console.log(ret);
-    
   }, 'jsonp');
 };
 
