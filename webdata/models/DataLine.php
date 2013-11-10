@@ -12,7 +12,7 @@ class DataLine extends Pix_Table
         // 集合 ID
         $this->_columns['set_id'] = array('type' => 'int');
         // 資料內容
-        $this->_columns['data'] = array('type' => 'text');
+        $this->_columns['data'] = array('type' => 'json');
 
         $this->addIndex('setid_id', array('set_id', 'id'), 'unique');
     }
