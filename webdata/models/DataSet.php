@@ -44,4 +44,10 @@ class DataSet extends Pix_Table
         $this->addRowHelper('Pix_Table_Helper_EAV', array('getEAV', 'setEAV'));
         $this->addIndex('path', array('path'), 'unique');
     }
+
+    public function findByPath($user, $repository, $path)
+    {
+        return DataSet::find_by_path('/' . $user . '/' . $repository . '/' . $path);
+
+    }
 }
