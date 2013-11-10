@@ -21,19 +21,7 @@ main.onload_user_tree = function(){
 
 main.onload_user_blob = function(){
   $.get('https://api.github.com/repos/' + encodeURIComponent(main.params.user) + '/' + encodeURIComponent(main.params.repository) + '/contents/' + main.params.path, function(ret){
-console.log(ret);
-$('#blob-content').text(Base64.decode(ret.data.content));
-return;
-    $('#file-table').empty();
-
-    var tr_dom;
-    var type;
-    for (var i = 0; i < ret.data.length; i ++) {
-      tr_dom = $('<tr></tr>');
-      tr_dom.append($('<td></td>').append($('<a></a>').attr('href', '/' + encodeURIComponent(main.params.user) + '/' + encodeURIComponent(main.params.repository) + '/' + type + '/' + ret.data[i].path).text(ret.data[i].name)));
-
-      $('#file-table').append(tr_dom);
-    }
+    $('#blob-content').text(Base64.decode(ret.data.content));
   }, 'jsonp');
 };
 
