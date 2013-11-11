@@ -41,7 +41,7 @@ var jqGridOptions = {
         caption: <?= json_encode($set->getEAV('title')) ?>
 };
 jQuery("#datagrid").jqGrid(jqGridOptions);
-jQuery("#datagrid").jqGrid('navGrid','#navGrid',{edit:true,add:true,del:true});
+jQuery("#datagrid").jqGrid('navGrid','#navGrid',{edit:false,add:false,del:false});
 </script>
 <?php } else { ?>
 <pre id="blob-content" class="pre"></pre>
