@@ -23,6 +23,7 @@ Pix_Controller::addDispatcher(function($url){
             'user' =>$terms[1], 
             'repository' => $terms[2],
             'path' => '',
+            'branch' => 'master',
         ));
     }
 

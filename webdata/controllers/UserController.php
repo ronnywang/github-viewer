@@ -113,5 +113,6 @@ class UserController extends Pix_Controller
         $this->view->user = $params['user'];
         $this->view->repository = $params['repository'];
         $this->view->path = $params['path'];
+        $this->view->branch = $params['branch'];
     }
 }
