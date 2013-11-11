@@ -34,7 +34,11 @@ main.onload_user_blob = function(){
     return;
   }
   $.get('https://api.github.com/repos/' + encodeURIComponent(main.params.user) + '/' + encodeURIComponent(main.params.repository) + '/contents/' + main.params.path, function(ret){
-    $('#blob-content').text(Base64.decode(ret.data.content));
+    if (ret.data.size > 0 && ret.data.content == '') {
+      $('#blob-content').text("(Sorry about that, but we can't show files that are this big right now.)");
+    } else {
+      $('#blob-content').text(Base64.decode(ret.data.content));
+    }
   }, 'jsonp');
 };
 
