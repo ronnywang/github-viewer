@@ -21,6 +21,8 @@ main.onload_user_tree = function(){
 
 main.onload_user_blob = function(){
   $('#btn-import-csv').click(function(e){
+    $(this).text($(this).attr('data-wording-importing'));
+
     $.post('/user/importcsv?user=' + encodeURIComponent(main.params.user) + '&repository=' + encodeURIComponent(main.params.repository) + '&path=' + encodeURIComponent(main.params.path), {}, function(ret){
         if (ret.error) {
           alert(ret.message);
