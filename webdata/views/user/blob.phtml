@@ -12,7 +12,8 @@ $this->params = array(
     <a href="/<?= urlencode($this->user) ?>/<?= urlencode($this->repository) ?>"><?= $this->escape($this->repository) ?></a>
 </h1>
 <hr>
-<button id="btn-import-csv">Import CSV</button>
+<button id="btn-import-csv">匯入成CSV</button>
+<a href="https://github.com/<?= urlencode($this->user) ?>/<?= urlencode($this->repository) ?>/blob/<?= urlencode($this->branch) ?>/<?= $this->escape($this->path) ?>" target="_blank">Github原始頁</a>
 <?php if ($set = DataSet::findByPath($this->user, $this->repository, $this->path)){ ?>
 <table id="datagrid"></table>
 <div id="navGrid"></div>
