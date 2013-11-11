@@ -89,8 +89,7 @@ class UserController extends Pix_Controller
         $columns = fgetcsv($fp);
         $set->setEAV('columns', json_encode($columns));
 
-        // TODO: change to bulk delete
-        $set->lines->delete();
+        DataLine::getDb()->query("DELETE FROM data_line WHERE set_id = {$set->set_id}");
 
         $insert_rows = array();
         while ($row = fgetcsv($fp)){
