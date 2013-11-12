@@ -7,6 +7,38 @@ class UserController extends Pix_Controller
         $this->view->user = $params['user'];
     }
 
+    public function importgeoAction()
+    {
+        // TODO: 要線上產生
+        $sql = "DELETE FROM geo_point WHERE group_id = 8;";
+        $sql = "INSERT INTO geo_point (group_id, geo, data_id) SELECT set_id, ST_Point((data->>7)::numeric, (data->>6)::numeric), id FROM data_line WHERE set_id = 8;";
+    }
+
+    public function getdatafrompointAction()
+    {
+        list(, /*user*/, /*getdatafrompoint*/, $id) = explode('/', $this->getURI());
+
+        if (!$set = DataSet::find(intval($id))) {
+            return $this->redirect('/');
+        }
+        $lat = floatval($_GET['lat']);
+        $lng = floatval($_GET['lng']);
+        $sql = "SELECT data_id FROM geo_point WHERE group_id = {$set->set_id} ORDER BY geo::geometry <-> ST_PointFromText('POINT({$lng} {$lat})', 4326) LIMIT 1";
+        $db = GeoPoint::getDb();
+
+        $res = $db->query($sql);
+        if (!$row = $res->fetch_assoc()) {
+            return $this->json(array('error' => true, 'message' => 'not found'));
+        }
+
+        if (!$data_line = DataLine::search(array('set_id' => $set->set_id, 'id' => $row['data_id']))->first()) {
+            $columns = array('錯誤', 'data_id');
+            $values = array('找不到這筆資料', $data_id);
+            return $this->json(array('error' => false, 'columns' => $columns, 'values' => $values));
+        }
+        return $this->json(array('error' => false, 'columns' => json_decode($set->getEAV('columns')), 'values' => json_decode($data_line->data)));
+    }
+
     public function getdataAction()
     {
         list(, /*data*/, /*getdata*/, $id) = explode('/', $this->getURI());
@@ -113,5 +145,19 @@ class UserController extends Pix_Controller
         $this->view->repository = $params['repository'];
         $this->view->path = $params['path'];
         $this->view->branch = $params['branch'];
+    }
+
+    public function mapAction($params)
+    {
+        $this->view->user = $params['user'];
+        $this->view->repository = $params['repository'];
+        $this->view->branch = $params['branch'];
+        $this->view->path = $params['path'];
+
+        if (!$set = DataSet::findByPath($params['user'], $params['repository'], $params['path'])) {
+            return $this->redirect('/');
+        }
+
+        $this->view->data_set = $set;
     }
 }
