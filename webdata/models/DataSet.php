@@ -21,6 +21,11 @@ class DataSetRow extends Pix_Table_Row
         $this->setEAV('max_values', json_encode($max_rows));
         $this->setEAV('min_values', json_encode($min_rows));
     }
+
+    public function getLayerID()
+    {
+        return $this->set_id;
+    }
 }
 
 class DataSet extends Pix_Table
