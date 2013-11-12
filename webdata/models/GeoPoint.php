@@ -11,6 +11,7 @@ class GeoPoint extends Pix_Table
         $this->_columns['point_id'] = array('type' => 'int', 'auto_increment' => true);
         $this->_columns['group_id'] = array('type' => 'int');
         $this->_columns['geo'] = array('type' => 'geography', 'modifier' => array('point', 4326));
+        $this->_columns['data_id'] = array('type' => 'int');
 
         // GeoPoint::getDb()->query("CREATE INDEX geo_point_geo ON geo_point USING GIST(geo)");
     }
