@@ -117,7 +117,8 @@ function initialize() {
         mapOptions);
     map.overlayMapTypes.insertAt(0, wmsMapType);
     google.maps.event.addListener(map, 'click', function(e){
-        $.get('/user/getdatafrompoint/<?= $this->data_set->set_id ?>/?lat=' + e.latLng.lat() + '&lng=' + e.latLng.lng(), function(ret){
+            $.get('/user/getdatafrompoint/?lat=' + e.latLng.lat() + '&lng=' + e.latLng.lng() + '&layer=' + encodeURIComponent(<?= json_encode($this->data_set->getLayerID()) ?>), function(ret){
+
             $('#area-info').empty();
             if (ret.error) {
                 $('#area-info').text(ret.message);
