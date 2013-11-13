@@ -151,12 +151,46 @@ class GeoJSON2Image
             self::drawJSON($gd, $json->geometry, $boundry, $max_size, (array)($json->properties));
             break;
 
-        case 'MultiPolygon':
+        case 'Polygon':
             if (array_key_exists('background_color', $draw_options)) {
-                $color = imagecolorallocate($gd, $draw_options['background_color'][0], $draw_options['background_color'][1], $draw_options['background_color'][2]);
+                $background_color = imagecolorallocate($gd, $draw_options['background_color'][0], $draw_options['background_color'][1], $draw_options['background_color'][2]);
             } else {
                 // random color if no background_color
-                $color = imagecolorallocate($gd, rand(0, 255), rand(0, 255), rand(0, 255));
+                $background_color = imagecolorallocate($gd, rand(0, 255), rand(0, 255), rand(0, 255));
+            }
+
+            if (array_key_exists('border_color', $draw_options)) {
+                $border_color = imagecolorallocate($gd, $draw_options['border_color'][0], $draw_options['border_color'][1], $draw_options['border_color'][2]);
+            } else {
+                $border_color = imagecolorallocate($gd, 0, 0, 0);
+            }
+            foreach ($json->coordinates as $linestrings) {
+                $points = array();
+                if (count($linestrings) <= 3) {
+                    // skip 2 points
+                    continue 2;
+                }
+                foreach ($linestrings as $point) {
+                    $new_point = self::transformPoint($point, $boundry, $max_size);
+                    $points[] = floor($new_point[0]);
+                    $points[] = floor($new_point[1]);
+                }
+                imagefilledpolygon($gd, $points, count($points) / 2, $background_color);
+                imagepolygon($gd, $points, count($points) / 2, $border_color);
+            }
+            break;
+
+        case 'MultiPolygon':
+            if (array_key_exists('background_color', $draw_options)) {
+                $background_color = imagecolorallocate($gd, $draw_options['background_color'][0], $draw_options['background_color'][1], $draw_options['background_color'][2]);
+            } else {
+                // random color if no background_color
+                $background_color = imagecolorallocate($gd, rand(0, 255), rand(0, 255), rand(0, 255));
+            }
+            if (array_key_exists('border_color', $draw_options)) {
+                $border_color = imagecolorallocate($gd, $draw_options['border_color'][0], $draw_options['border_color'][1], $draw_options['border_color'][2]);
+            } else {
+                $border_color = imagecolorallocate($gd, 0, 0, 0);
             }
 
             foreach ($json->coordinates as $polygons) {
@@ -171,16 +205,17 @@ class GeoJSON2Image
                         $points[] = floor($new_point[0]);
                         $points[] = floor($new_point[1]);
                     }
-                    imagefilledpolygon($gd, $points, count($points) / 2, $color);
+                    imagefilledpolygon($gd, $points, count($points) / 2, $background_color);
+                    imagepolygon($gd, $points, count($points) / 2, $border_color);
                 }
             }
             break;
 
         case 'Point':
             if (array_key_exists('background_color', $draw_options)) {
-                $color = imagecolorallocate($gd, $draw_options['background_color'][0], $draw_options['background_color'][1], $draw_options['background_color'][2]);
+                $background_color = imagecolorallocate($gd, $draw_options['background_color'][0], $draw_options['background_color'][1], $draw_options['background_color'][2]);
             } else {
-                $color = imagecolorallocate($gd, rand(0, 255), rand(0, 255), rand(0, 255));
+                $background_color = imagecolorallocate($gd, rand(0, 255), rand(0, 255), rand(0, 255));
             }
 
             if (array_key_exists('border_color', $draw_options)) {
@@ -191,14 +226,13 @@ class GeoJSON2Image
 
             $point = $json->coordinates;
             $new_point = self::transformPoint($point, $boundry, $max_size);
-            imagefilledellipse($gd, $new_point[0], $new_point[1], 10, 10, $color);
+            imagefilledellipse($gd, $new_point[0], $new_point[1], 10, 10, $background_color);
             imageellipse($gd, $new_point[0], $new_point[1], 10, 10, $border_color);
             break;
 
         case 'MultiPoint':
         case 'LineString':
         case 'MultiLineString':
-        case 'Polygon':
         default:
             throw new Exception("Unsupported GeoJSON type:{$json->type}");
         }
