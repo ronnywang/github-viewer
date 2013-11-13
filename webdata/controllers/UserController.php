@@ -16,27 +16,44 @@ class UserController extends Pix_Controller
 
     public function getdatafrompointAction()
     {
-        list(, /*user*/, /*getdatafrompoint*/, $id) = explode('/', $this->getURI());
-
-        if (!$set = DataSet::find(intval($id))) {
-            return $this->redirect('/');
-        }
+        $layer = json_decode($_GET['layer']);
         $lat = floatval($_GET['lat']);
         $lng = floatval($_GET['lng']);
-        $sql = "SELECT data_id FROM geo_point WHERE group_id = {$set->set_id} ORDER BY geo::geometry <-> ST_PointFromText('POINT({$lng} {$lat})', 4326) LIMIT 1";
-        $db = GeoPoint::getDb();
 
-        $res = $db->query($sql);
-        if (!$row = $res->fetch_assoc()) {
-            return $this->json(array('error' => true, 'message' => 'not found'));
-        }
+        if ($layer->type == 'geojson') {
+            if (!$set = DataSet::find(intval($layer->set_id))) {
+                return $this->redirect('/');
+            }
+            $sql = "SELECT id FROM data_geometry WHERE set_id = {$set->set_id} AND geo && ST_PointFromText('POINT({$lng} {$lat})', 4326)";
+            $res = DataGeometry::getDb()->query($sql);
+            if (!$row = $res->fetch_assoc()) {
+                return $this->json(array('error' => true, 'message' => 'not found'));
+            }
+            if (!$data_line = DataLine::search(array('set_id' => $set->set_id, 'id' => $row['id']))->first()) {
+                $columns = array('錯誤', 'data_id');
+                $values = array('找不到這筆資料', $row['id']);
+                return $this->json(array('error' => false, 'columns' => $columns, 'values' => $values));
+            }
+            return $this->json(array('error' => false, 'columns' => json_decode($set->getEAV('columns')), 'values' => json_decode($data_line->data)));
+        } else {
+            if (!$set = DataSet::find(intval($layer->set_id))) {
+                return $this->redirect('/');
+            }
+            $sql = "SELECT data_id FROM geo_point WHERE group_id = {$set->set_id} ORDER BY geo::geometry <-> ST_PointFromText('POINT({$lng} {$lat})', 4326) LIMIT 1";
+            $db = GeoPoint::getDb();
 
-        if (!$data_line = DataLine::search(array('set_id' => $set->set_id, 'id' => $row['data_id']))->first()) {
-            $columns = array('錯誤', 'data_id');
-            $values = array('找不到這筆資料', $data_id);
-            return $this->json(array('error' => false, 'columns' => $columns, 'values' => $values));
+            $res = $db->query($sql);
+            if (!$row = $res->fetch_assoc()) {
+                return $this->json(array('error' => true, 'message' => 'not found'));
+            }
+
+            if (!$data_line = DataLine::search(array('set_id' => $set->set_id, 'id' => $row['data_id']))->first()) {
+                $columns = array('錯誤', 'data_id');
+                $values = array('找不到這筆資料', $data_id);
+                return $this->json(array('error' => false, 'columns' => $columns, 'values' => $values));
+            }
+            return $this->json(array('error' => false, 'columns' => json_decode($set->getEAV('columns')), 'values' => json_decode($data_line->data)));
         }
-        return $this->json(array('error' => false, 'columns' => json_decode($set->getEAV('columns')), 'values' => json_decode($data_line->data)));
     }
 
     public function getdataAction()
