@@ -43,8 +43,8 @@ class DataSet extends Pix_Table
 
         $this->_hooks['eavs'] = array('get' => 'getEAVs');
 
-        $this->_relations['views'] = array('rel' => 'has_many', 'type' => 'DataView', 'foreign_key' => 'set_id');
-        $this->_relations['lines'] = array('rel' => 'has_many', 'type' => 'DataLine', 'foreign_key' => 'set_id');
+        $this->_relations['views'] = array('rel' => 'has_many', 'type' => 'DataView', 'foreign_key' => 'set_id', 'delete' => true);
+        $this->_relations['lines'] = array('rel' => 'has_many', 'type' => 'DataLine', 'foreign_key' => 'set_id', 'delete' => true);
 
         $this->addRowHelper('Pix_Table_Helper_EAV', array('getEAV', 'setEAV'));
         $this->addIndex('path', array('path'), 'unique');
