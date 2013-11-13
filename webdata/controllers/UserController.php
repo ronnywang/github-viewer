@@ -117,16 +117,86 @@ class UserController extends Pix_Controller
         } catch (Pix_Table_DuplicateException $e){
             $set = DataSet::find_by_path($db_path);
         }
-        if (0 === strpos($content, '{"')) {
+        if (0 === strpos($content, '{')) {
             $this->importJSON($content, $set);
         } else {
             $this->importCSV($fp, $set);
         }
     }
 
+    protected function importGeoJSON($json, $set, $path)
+    {
+        $columns = array('_path');
+
+        switch ($json->type) {
+        case 'FeatureCollection':
+            foreach ($json->features as $feature) {
+                $data = array($path);
+                if (!$feature->geometry->coordinates) {
+                    // TODO: 這邊要找出原因...
+                    continue;
+                }
+                foreach ($feature->properties as $key => $value) {
+                    if (FALSE === array_search($key, $columns)) {
+                        $columns[] = $key;
+                    }
+                    $data[array_search($key, $columns)] = $value;
+                }
+
+                $data_line = DataLine::insert(array(
+                    'set_id' => $set->set_id,
+                    'data' => json_encode($data),
+                ));
+                $db = DataGeometry::getDb();
+                $table = DataGeometry::getTable();
+                $sql = "INSERT INTO data_geometry (id, set_id, geo) VALUES ({$data_line->id}, {$set->set_id}, ST_ForceCollection(ST_GeomFromGeoJSON(" . $db->quoteWithColumn($table, json_encode($feature->geometry)) . ")))";
+                $db->query($sql);
+            }
+            break;
+
+        case 'Point':
+        case 'MultiPoint':
+        case 'LineString':
+        case 'MultiLineString':
+        case 'Polygon':
+        case 'MultiPolygon':
+            $data = array($path);
+            $data_line = DataLine::insert(array(
+                'set_id' => $set->set_id,
+                'data' => json_encode($data),
+            ));
+            $db = DataGeometry::getDb();
+            $table = DataGeometry::getTable();
+            $sql = "INSERT INTO data_geometry (id, set_id, geo) VALUES ({$data_line->id}, {$set->set_id}, ST_ForceCollection(ST_GeomFromGeoJSON(" . $db->quoteWithColumn($table, json_encode($json)) . ")))";
+            $db->query($sql);
+            break;
+
+        default:
+            return $this->json(array('error' => true, 'message' => "Unsupport json type {$json->type}"));
+        }
+
+        $set->setEAV('columns', json_encode($columns));
+    }
+
     protected function importJSON($json, $set)
     {
-        // TODO:
+        if (!$json = json_decode($json)) {
+            return $this->json(array('error' => true, 'message' => 'Invalid JSON'));
+        }
+
+        DataLine::getDb()->query("DELETE FROM data_line WHERE set_id = {$set->set_id}");
+        DataGeometry::getDb()->query("DELETE FROM data_geometry WHERE set_id = {$set->set_id}");
+
+        if ($json->type == 'Topology') {
+            $geojsons = GeoTopoJSON::toGeoJSONs($json);
+            foreach ($geojsons as $topo_id => $geojson) {
+                $this->importGeoJSON($geojson, $set, $topo_id);
+            }
+            return $this->json(array('error' => 0));
+        } else {
+            $this->importGeoJSON($json, $set, '');
+        }
+        return $this->json(array('error' => 0));
     }
 
     protected function importCSV($fp, $set)
