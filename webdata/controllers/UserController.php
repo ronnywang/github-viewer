@@ -176,6 +176,7 @@ class UserController extends Pix_Controller
         }
 
         $set->setEAV('columns', json_encode($columns));
+        $set->setEAV('data_type', 'geojson');
     }
 
     protected function importJSON($json, $set)
