@@ -117,7 +117,20 @@ class UserController extends Pix_Controller
         } catch (Pix_Table_DuplicateException $e){
             $set = DataSet::find_by_path($db_path);
         }
+        if (0 === strpos($content, '{"')) {
+            $this->importJSON($content, $set);
+        } else {
+            $this->importCSV($fp, $set);
+        }
+    }
 
+    protected function importJSON($json, $set)
+    {
+        // TODO:
+    }
+
+    protected function importCSV($fp, $set)
+    {
         $columns = fgetcsv($fp);
         $set->setEAV('columns', json_encode($columns));
 
