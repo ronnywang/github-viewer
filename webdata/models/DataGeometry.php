@@ -10,6 +10,8 @@ class DataGeometry extends Pix_Table
 
         $this->_columns['id'] = array('type' => 'int');
         $this->_columns['set_id'] = array('type' => 'int');
-        $this->_columns['geo'] = array('type' => 'geography');
+        $this->_columns['geo'] = array('type' => 'geography', 'modifier' => array('geometrycollection', 4326));
+
+        $this->addIndex('set_id', array('set_id'));
     }
 }
