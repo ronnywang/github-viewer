@@ -25,30 +25,42 @@ class WmsController extends Pix_Controller
         $time = array();
         $time[0] = microtime(true);
 
+        $options = array();
+
         $version = $this->getParam('version');
         $layers = $this->getParam('layers');
         $styles = $this->getParam('styles');
         $srs = $this->getParam('srs');
         // minx, miny, maxx, maxy
         $bbox = $this->getParam('bbox');
-        $width = $this->getParam('width');
-        $height = $this->getParam('height');
+        $options['width'] = $this->getParam('width');
+        $options['height'] = $this->getParam('height');
         $format = $this->getParam('format');
 
-        $db = GeoPoint::getDb();
         list($min_lng, $min_lat, $max_lng, $max_lat) = explode(',', $bbox);
-        $min_lng = floatval($min_lng);
-        $max_lng = floatval($max_lng);
-        $min_lat = floatval($min_lat);
-        $max_lat = floatval($max_lat);
-        $text = "POLYGON(({$min_lng} {$min_lat},{$min_lng} {$max_lat},{$max_lng} {$max_lat},{$max_lng} {$min_lat},{$min_lng} {$min_lat}))";
-        $group_id = json_decode($layers);
-        if (!$dataset = DataSet::find($group_id)) {
+        $options['min_lng'] = floatval($min_lng);
+        $options['max_lng'] = floatval($max_lng);
+        $options['min_lat'] = floatval($min_lat);
+        $options['max_lat'] = floatval($max_lat);
+        $options['text'] = "POLYGON(({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},{$options['min_lng']} {$options['min_lat']}))";
+        $layer_data = json_decode($layers);
+        if ($layer_data->type == 'csv') {
+            return $this->drawCSV(intval($layer_data->set_id), $options);
+        } elseif ($layer_data->type == 'geojson') {
+        }
+    }
+
+    protected function drawGeoJSON($set_id, $options)
+    {
+    }
+
+    protected function drawCSV($set_id, $options)
+    {
+        if (!$dataset = DataSet::find($set_id)) {
             echo '404';
             return $this->noview();
         }
-        $group_id = intval($group_id);
-        $lng_delta = $max_lng - $min_lng;
+        $lng_delta = $options['max_lng'] - $options['min_lng'];
 
         if ($lng_delta < 0.01) {
             $tolerance = "0.000001";
@@ -62,10 +74,10 @@ class WmsController extends Pix_Controller
             $tolerance = "0.01";
         }
 
-        $sql = "SELECT data_id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$tolerance})) AS geojson FROM geo_point WHERE group_id = {$group_id} AND geo && ST_GeomFromText('$text')";
+        $sql = "SELECT data_id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$tolerance})) AS geojson FROM geo_point WHERE group_id = {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
         //$sql = "SELECT MIN(data_id) AS data_id, ST_AsGeoJSON(ST_Centroid(ST_Collect(geo::geometry))) AS geojson FROM (SELECT kmeans(ARRAY[ST_X(geo::geometry), ST_Y(geo::geometry)], 1000) OVER (), geo, data_id FROM geo_point WHERE group_id = {$group_id} AND geo && ST_GeomFromText('$text')) AS ksub GROUP BY kmeans";
         //error_log($sql);
-        $res = $db->query($sql);
+        $res = GeoPoint::getDb()->query($sql);
         $time[1] = microtime(true);
 
         $json = new StdClass;
@@ -106,8 +118,8 @@ class WmsController extends Pix_Controller
         $json->features = $features;
 
         $obj = new GeoJSON2Image($json);
-        $obj->setSize($width);
-        $obj->setBoundry(array($min_lng, $max_lng, $min_lat, $max_lat));
+        $obj->setSize($options['width']);
+        $obj->setBoundry(array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']));
         $obj->draw();
 
         $time[3] = microtime(true);
