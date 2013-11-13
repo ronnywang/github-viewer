@@ -83,7 +83,7 @@ var wmsTypeOptions = {
         <?php if (getenv('IMAGE_PROXY_DOMAIN')) { ?>
         base_url = 'http://' + <?= json_encode(getenv('IMAGE_PROXY_DOMAIN')) ?>;
         <?php } ?>
-            base_url += '/wms?Request=GetMap&Layers=' + encodeURIComponent(<?= $this->data_set->getLayerID() ?>);
+            base_url += '/wms?Request=GetMap&Layers=' + encodeURIComponent(<?= json_encode($this->data_set->getLayerID()) ?>);
         return base_url += '&BBox=' + bbox + '&Width=' + tile_width + '&height=' + tile_height;
     },
     tileSize: new google.maps.Size(tile_width, tile_height),
