@@ -100,7 +100,7 @@ class Pix_Table_Db_Adapter_PgSQL extends Pix_Table_Db_Adapter_SQL
     public function createTable($table)
     {
         $sql = "CREATE TABLE \"" . $table->getTableName() . '"';
-        $types = array('bigint', 'tinyint', 'int', 'varchar', 'char', 'text', 'float', 'double', 'binary', 'geography');
+        $types = array('bigint', 'tinyint', 'int', 'varchar', 'char', 'text', 'float', 'double', 'binary', 'geography', 'json');
         $primarys = is_array($table->_primary) ? $table->_primary : array($table->_primary);
         $pk_isseted = false;
 
