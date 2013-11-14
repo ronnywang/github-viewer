@@ -60,19 +60,32 @@ main.show_map = function(){
   var zoom = 8;
   var lat = 23.9720;
   var lng = 120.9777;
-  if (matches) {
-    zoom = parseInt(matches[3]);
-    lat = parseFloat(matches[1]);
-    lng = parseFloat(matches[2]);
-  }
-  var myLatlng = new google.maps.LatLng(lat, lng);
+
   var mapOptions = {
-    center: myLatlng,
-    zoom: zoom,
     streetViewControl: false,
   };
 
   map = new google.maps.Map(document.getElementById('data-tab-map'), mapOptions);
+  if (matches) {
+    zoom = parseInt(matches[3]);
+    lat = parseFloat(matches[1]);
+    lng = parseFloat(matches[2]);
+    myLatlng = new google.maps.LatLng(lat, lng);
+    map.setLatlng(myLatlng);
+    map.setoom(zoom);
+  } else if ($('#btn-tab-map').attr('data-boundary')) {
+    var b = JSON.parse($('#btn-tab-map').attr('data-boundary'));
+console.log(b);
+    var southWest = new google.maps.LatLng(parseFloat(b.min_lat), parseFloat(b.min_lng));
+    var northEast = new google.maps.LatLng(parseFloat(b.max_lat), parseFloat(b.max_lng));
+    var bounds = new google.maps.LatLngBounds(southWest, northEast);
+    map.fitBounds(bounds);
+  } else {
+    myLatlng = new google.maps.LatLng(lat, lng);
+    map.setLatlng(myLatlng);
+    map.setoom(zoom);
+  }
+
   var infowindow = new google.maps.InfoWindow({
     maxWidth: '500px'
   });

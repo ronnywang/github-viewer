@@ -14,7 +14,7 @@ $set = DataSet::findByPath($this->user, $this->repository, $this->path);
 <a href="https://github.com/<?= urlencode($this->user) ?>/<?= urlencode($this->repository) ?>/blob/<?= urlencode($this->branch) ?>/<?= $this->escape($this->path) ?>" target="_blank">Github原始頁</a>
 <?php if ($set and $set->getEAV('data_type') == 'geojson') { ?>
 <button id="btn-tab-list">顯示資料</button>
-<button id="btn-tab-map">顯示地圖</button>
+<button id="btn-tab-map" data-boundary="<?= $this->escape($set->getEAV('boundary')) ?>">顯示地圖</button>
 <?php } ?>
 <?php if ($set) { ?>
 <div id="data-tab-list" class="data-tab">
