@@ -133,6 +133,11 @@ class UserController extends Pix_Controller
             $set = DataSet::find_by_path($db_path);
         }
 
+        if ($set->getEAV('sha') == $ret->sha) {
+            return $this->json(array('message' => '檔案未修改', 'error' => true));
+        }
+        $set->setEAV('sha', $ret->sha);
+
         if ($ret->content) {
             $content = base64_decode($ret->content);
         } else {
