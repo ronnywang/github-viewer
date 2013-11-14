@@ -87,7 +87,9 @@ main.show_map = function(){
        var span_dom = $('<span></span>');
        span_dom.empty();
        if (ret.error) {
-         span_dom.text(ret.message);
+         console.log(ret.message);
+         infowindow.setMap(null);
+         marker.setMap(null);
        } else {
          for (var i = 0; i < ret.columns.length; i ++) {
            li_dom = $('<div></div>');
@@ -98,6 +100,7 @@ main.show_map = function(){
        infowindow.setContent(span_dom.html());
        infowindow.open(map, marker);
        marker.setPosition(e.latLng);
+       marker.setMap(map);
      }, 'json');
    });
 
@@ -121,6 +124,7 @@ main.onload_user_blob = function(){
       main.map_is_showed = true;
       main.show_map();
     }
+    $('#data-tab-map').height($(window).height() - $('#data-tab-map').position().top - 30);
   });
   $('#btn-import-csv').click(function(e){
     $(this).text($(this).attr('data-wording-importing'));
