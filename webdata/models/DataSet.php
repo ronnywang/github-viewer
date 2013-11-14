@@ -7,6 +7,22 @@ class DataSetRow extends Pix_Table_Row
         return EAV::search(array('table' => 'DataSet', 'id' => $this->set_id));
     }
 
+    public function countBoundary()
+    {
+        $res = DataGeometry::GetDb()->query("SELECT ST_Extent(geo::geometry) AS boundary FROM data_geometry WHERE set_id = {$this->set_id}");
+        $row = $res->fetch_assoc();
+        if (!preg_match('#BOX\(([-0-9\.]*) ([-0-9\.]*),([-0-9\.]*) ([-0-9\.]*)\)#', $row['boundary'], $matches)) {
+            error_log("DataSet id={$this->set_id} countBoundary failed");
+            return;
+        }
+        $this->setEAV('boundary', json_encode(array(
+            'min_lng' => $matches[1],
+            'max_lng' => $matches[3],
+            'min_lat' => $matches[2],
+            'max_lat' => $matches[4],
+        )));
+    }
+
     public function countMaxMin()
     {
         $max_rows = array();
