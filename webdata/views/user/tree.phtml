@@ -8,9 +8,7 @@ $this->params = array(
 );
 ?>
 <?= $this->partial('common/header.phtml', $this); ?>
-<h1>
-    <a href="/<?= urlencode($this->user) ?>"><?= $this->escape($this->user) ?></a>
-</h1>
+<?= $this->partial('user/header.phtml', $this) ?>
 <hr>
 <table class="table" id="file-table">
 </table>

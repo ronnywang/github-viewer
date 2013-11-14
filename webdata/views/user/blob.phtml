@@ -7,10 +7,7 @@ $this->params = array(
 );
 ?>
 <?= $this->partial('common/header.phtml', $this); ?>
-<h1>
-    <a href="/<?= urlencode($this->user) ?>"><?= $this->escape($this->user) ?></a> /
-    <a href="/<?= urlencode($this->user) ?>/<?= urlencode($this->repository) ?>"><?= $this->escape($this->repository) ?></a>
-</h1>
+<?= $this->partial('user/header.phtml', $this) ?>
 <hr>
 <button id="btn-import-csv" data-wording-importing="匯入中...">匯入成CSV</button>
 <a href="https://github.com/<?= urlencode($this->user) ?>/<?= urlencode($this->repository) ?>/blob/<?= urlencode($this->branch) ?>/<?= $this->escape($this->path) ?>" target="_blank">Github原始頁</a>
