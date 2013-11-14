@@ -138,6 +138,14 @@ class UserController extends Pix_Controller
             fclose($fp);
         }
 
+        if (0 === strpos($content, '{')) {
+            // JSON
+        } elseif (preg_match('#\.csv$#', $path)) {
+            // CSV
+        } else {
+            return $this->json(array('error' => true, 'message' => '不確定檔案格式，無法匯入'));
+        }
+
         try {
             $set = DataSet::insert(array(
                 'path' => $db_path,
