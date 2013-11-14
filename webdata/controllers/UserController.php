@@ -101,6 +101,15 @@ class UserController extends Pix_Controller
         $path = $_GET['path'];
         $db_path = '/' . $user . '/' . $repository . '/' . $path;
 
+        if (preg_match('#json$#', $path)) {
+            // JSON
+        } elseif (preg_match('#\.csv$#', $path)) {
+            // CSV
+        } else {
+            return $this->json(array('error' => true, 'message' => '不確定檔案格式，無法匯入'));
+        }
+
+
         $url = 'https://api.github.com/repos/' . urlencode($user) . '/' . urlencode($repository) . '/contents/' . urlencode($path);
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -138,14 +147,6 @@ class UserController extends Pix_Controller
             fclose($fp);
         }
 
-        if (0 === strpos($content, '{')) {
-            // JSON
-        } elseif (preg_match('#\.csv$#', $path)) {
-            // CSV
-        } else {
-            return $this->json(array('error' => true, 'message' => '不確定檔案格式，無法匯入'));
-        }
-
         try {
             $set = DataSet::insert(array(
                 'path' => $db_path,
@@ -158,9 +159,9 @@ class UserController extends Pix_Controller
         fputs($fp, $content);
         rewind($fp);
 
-        if (0 === strpos($content, '{')) {
+        if (preg_match('#json$#', $path)) {
             $this->importJSON($fp, $set);
-        } else {
+        } elseif (preg_match('#\.csv$#', $path)) {
             $this->importCSV($fp, $set);
         }
     }
