@@ -9,7 +9,7 @@ $this->params = array(
 <?= $this->partial('common/header.phtml', $this); ?>
 <?= $this->partial('user/header.phtml', $this) ?>
 <hr>
-<button id="btn-import-csv" data-wording-importing="匯入中...">匯入成CSV</button>
+<button id="btn-import-csv" data-wording-importing="匯入中...">匯入</button>
 <a href="https://github.com/<?= urlencode($this->user) ?>/<?= urlencode($this->repository) ?>/blob/<?= urlencode($this->branch) ?>/<?= $this->escape($this->path) ?>" target="_blank">Github原始頁</a>
 <?php if ($set = DataSet::findByPath($this->user, $this->repository, $this->path)){ ?>
 <table id="datagrid"></table>
