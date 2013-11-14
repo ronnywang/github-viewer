@@ -191,7 +191,7 @@ class UserController extends Pix_Controller
             ));
             $db = DataGeometry::getDb();
             $table = DataGeometry::getTable();
-            $sql = "INSERT INTO data_geometry (id, set_id, geo) VALUES ({$data_line->id}, {$set->set_id}, ST_ForceCollection(ST_GeomFromGeoJSON(" . $db->quoteWithColumn($table, json_encode($json->geometry)) . ")))";
+            $sql = "INSERT INTO data_geometry (id, set_id, geo) VALUES ({$data_line->id}, {$set->set_id}, ST_ForceCollection(ST_Force2D(ST_GeomFromGeoJSON(" . $db->quoteWithColumn($table, json_encode($json->geometry)) . "))))";
             $db->query($sql);
             return 1;
 
@@ -215,7 +215,7 @@ class UserController extends Pix_Controller
             ));
             $db = DataGeometry::getDb();
             $table = DataGeometry::getTable();
-            $sql = "INSERT INTO data_geometry (id, set_id, geo) VALUES ({$data_line->id}, {$set->set_id}, ST_ForceCollection(ST_GeomFromGeoJSON(" . $db->quoteWithColumn($table, json_encode($json)) . ")))";
+            $sql = "INSERT INTO data_geometry (id, set_id, geo) VALUES ({$data_line->id}, {$set->set_id}, ST_ForceCollection(ST_Force2D(ST_GeomFromGeoJSON(" . $db->quoteWithColumn($table, json_encode($json)) . "))))";
             $db->query($sql);
             return 1;
 
