@@ -276,6 +276,7 @@ class UserController extends Pix_Controller
 
         $set->setEAV('columns', json_encode($columns));
         $set->setEAV('data_type', 'geojson');
+        $set->countBoundary();
 
         return $this->json(array('error' => 0, 'count' => $inserted, 'columns' => $columns));
     }
