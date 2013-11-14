@@ -164,6 +164,12 @@ class GeoJSON2Image
             } else {
                 $border_color = imagecolorallocate($gd, 0, 0, 0);
             }
+
+            if (array_key_exists('border_size', $draw_options)) {
+                $border_size = $draw_options['border_size'];
+            } else {
+                $border_size = 3;
+            }
             foreach ($json->coordinates as $linestrings) {
                 $points = array();
                 if (count($linestrings) <= 3) {
@@ -175,6 +181,7 @@ class GeoJSON2Image
                     $points[] = floor($new_point[0]);
                     $points[] = floor($new_point[1]);
                 }
+                imagesetthickness($gd, $border_size);
                 imagefilledpolygon($gd, $points, count($points) / 2, $background_color);
                 imagepolygon($gd, $points, count($points) / 2, $border_color);
             }
@@ -193,6 +200,12 @@ class GeoJSON2Image
                 $border_color = imagecolorallocate($gd, 0, 0, 0);
             }
 
+            if (array_key_exists('border_size', $draw_options)) {
+                $border_size = $draw_options['border_size'];
+            } else {
+                $border_size = 3;
+            }
+
             foreach ($json->coordinates as $polygons) {
                 foreach ($polygons as $linestrings) {
                     $points = array();
@@ -205,6 +218,7 @@ class GeoJSON2Image
                         $points[] = floor($new_point[0]);
                         $points[] = floor($new_point[1]);
                     }
+                    imagesetthickness($gd, $border_size);
                     imagefilledpolygon($gd, $points, count($points) / 2, $background_color);
                     imagepolygon($gd, $points, count($points) / 2, $border_color);
                 }
