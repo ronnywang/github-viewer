@@ -95,10 +95,7 @@ class WmsController extends Pix_Controller
             $feature = new StdClass;
             $feature->type = 'Feature';
             $feature->properties = array('background_color' => array(0,0,0), 'border_color' => array(100, 0, 0));
-            if (!json_decode($geojson)->geometries[0]) {
-                continue;
-            }
-            $feature->geometry = json_decode($geojson)->geometries[0];
+            $feature->geometry = json_decode($geojson);
             $features[] = $feature;
         }
         $json->features = $features;
