@@ -125,6 +125,14 @@ class UserController extends Pix_Controller
             return $this->json(array('message' => 'File not found', 'error' => true));
         }
 
+        try {
+            $set = DataSet::insert(array(
+                'path' => $db_path,
+            ));
+        } catch (Pix_Table_DuplicateException $e){
+            $set = DataSet::find_by_path($db_path);
+        }
+
         if ($ret->content) {
             $content = base64_decode($ret->content);
         } else {
@@ -145,14 +153,6 @@ class UserController extends Pix_Controller
             $content = implode("\n", $outputs);
 
             fclose($fp);
-        }
-
-        try {
-            $set = DataSet::insert(array(
-                'path' => $db_path,
-            ));
-        } catch (Pix_Table_DuplicateException $e){
-            $set = DataSet::find_by_path($db_path);
         }
 
         $fp = tmpfile();
