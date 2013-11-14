@@ -94,7 +94,7 @@ class WmsController extends Pix_Controller
         foreach ($geojsons as $id => $geojson) {
             $feature = new StdClass;
             $feature->type = 'Feature';
-            $feature->properties = array('background_color' => array(0,0,0), 'border_color' => array(100, 100, 100));
+            $feature->properties = array('background_color' => array(0,0,0), 'border_color' => array(100, 0, 0));
             if (!json_decode($geojson)->geometries[0]) {
                 continue;
             }
