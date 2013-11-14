@@ -38,6 +38,8 @@ main.onload_user_blob = function(){
   $.get('https://api.github.com/repos/' + encodeURIComponent(main.params.user) + '/' + encodeURIComponent(main.params.repository) + '/contents/' + main.params.path, function(ret){
     if (ret.data.size > 0 && ret.data.content == '') {
       $('#blob-content').text("(Sorry about that, but we can't show files that are this big right now.)");
+    } else if (ret.data.message == 'Not Found') {
+      $('#blob-content').text("(File Not Found)");
     } else {
       $('#blob-content').text(Base64.decode(ret.data.content));
     }
