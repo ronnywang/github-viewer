@@ -15,9 +15,4 @@ class GeoPoint extends Pix_Table
 
         // GeoPoint::getDb()->query("CREATE INDEX geo_point_geo ON geo_point USING GIST(geo)");
     }
-
-    public function _getDb()
-    {
-        return DataLine::getDb();
-    }
 }

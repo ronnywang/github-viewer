@@ -16,18 +16,4 @@ class DataLine extends Pix_Table
 
         $this->addIndex('setid_id', array('set_id', 'id'), 'unique');
     }
-
-    public function _getDb()
-    {
-        if (!preg_match('#pgsql://([^:]*):([^@]*)@([^/]*)/(.*)#', strval(getenv('PGSQL_DATABASE_URL')), $matches)) {
-            die('pgsql only');
-        }
-        $options = array(
-            'host' => $matches[3],
-            'user' => $matches[1],
-            'password' => $matches[2],
-            'dbname' => $matches[4],
-        );
-        return new Pix_Table_Db_Adapter_PgSQL($options);
-    }
 }
