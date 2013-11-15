@@ -51,6 +51,11 @@ class DataSetRow extends Pix_Table_Row
                 'type' => 'geojson',
                 'set_id' => $this->set_id,
             ));
+        } elseif ($this->getEAV('data_type') == 'csvmap') {
+            return json_encode(array(
+                'type' => 'csvmap',
+                'set_id' => $this->set_id,
+            ));
         }
         return json_encode(array(
             'type' => 'csv',
