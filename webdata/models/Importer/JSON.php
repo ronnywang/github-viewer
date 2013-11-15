@@ -42,6 +42,38 @@ class Importer_JSON
 
         $inserted = 0;
         switch ($type) {
+        case 'CSVMap':
+            if (!$json = json_decode(file_get_contents($file_path))) {
+                throw new Importer_Exception("Invalid CSVMap JSON");
+            }
+
+            list($user, $repository, $path) = explode("/", $json->data, 3);
+            if (!preg_match('#\.csv$#', $path)) {
+                throw new Importer_Exception("data must be csv");
+            }
+            $data_github_options = array(
+                'user' => $user,
+                'repository' => $repository,
+                'path' => $path,
+            );
+            Importer_CSV::import($data_github_options);
+            $data_set = DataSet::findByOptions($data_github_options);
+            $data_columns = json_decode($data_set->getEAV('columns'));
+            if (false === ($lat_id = array_search(strval($json->latlng[0]), $data_columns))) {
+                throw new Importer_Exception("data must be lat column name");
+            }
+            if (false === ($lng_id = array_search(strval($json->latlng[1]), $data_columns))) {
+                throw new Importer_Exception("data must be lng column name");
+            }
+
+            $set = self::getSetAndUpdateSHA($github_options, $content_obj->sha);
+            $set->setEAV('data_from', DataSet::findByOptions($data_github_options)->set_id);
+            $set->setEAV('data_type', 'csvmap');
+
+            GeoPoint::getDb()->query("DELETE FROM geo_point WHERE group_id = {$set->set_id}");
+            GeoPoint::getDb()->query("INSERT INTO geo_point (group_id, geo, data_id) SELECT set_id, ST_Point((data->>{$lng_id})::numeric, (data->>{$lat_id})::numeric), id FROM data_line WHERE set_id = {$data_set->set_id}");
+            return 1;
+
         case 'Topology':
             $set = self::getSetAndUpdateSHA($github_options, $content_obj->sha);
 
