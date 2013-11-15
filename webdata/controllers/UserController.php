@@ -102,7 +102,7 @@ class UserController extends Pix_Controller
         $db_path = '/' . $user . '/' . $repository . '/' . $path;
         $github_options = array(
             'user' => $user,
-            'repository' => $repos,
+            'repository' => $repository,
             'path' => $path,
         );
 
