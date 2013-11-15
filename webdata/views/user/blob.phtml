@@ -14,8 +14,8 @@ $set = DataSet::findByPath($this->user, $this->repository, $this->path);
 <a href="https://github.com/<?= urlencode($this->user) ?>/<?= urlencode($this->repository) ?>/blob/<?= urlencode($this->branch) ?>/<?= $this->escape($this->path) ?>" target="_blank">Github原始頁</a>
 <?php if ($set and $set->getEAV('data_type') == 'geojson') { ?>
 <?= $this->partial('/user/blob_geojson.phtml', array('set' => $set)) ?>
-<?= $this->partial('/user/blob_csv.phtml', array('set' => $set)) ?>
-<?= $this->partial('/user/blob_map.phtml', array('set' => $set)) ?>
+<?php } elseif ($set and $set->getEAV('data_type') == 'csvmap') { ?>
+<?= $this->partial('/user/blob_csvmap.phtml', array('set' => $set)) ?>
 <?php } elseif ($set) { ?>
 <?= $this->partial('/user/blob_csv.phtml', array('set' => $set)) ?>
 <?php } else { ?>
