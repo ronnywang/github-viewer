@@ -71,8 +71,8 @@ main.show_map = function(){
     lat = parseFloat(matches[1]);
     lng = parseFloat(matches[2]);
     myLatlng = new google.maps.LatLng(lat, lng);
-    map.setLatlng(myLatlng);
-    map.setoom(zoom);
+    map.setCenter(myLatlng);
+    map.setZoom(zoom);
   } else if ($('#btn-tab-map').attr('data-boundary')) {
     var b = JSON.parse($('#btn-tab-map').attr('data-boundary'));
 console.log(b);
