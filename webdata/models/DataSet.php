@@ -88,6 +88,18 @@ class DataSet extends Pix_Table
         return DataSet::find_by_path('/' . $user . '/' . $repository . '/' . $path);
     }
 
+    public function createByOptions($github_options)
+    {
+        $user = $github_options['user'];
+        $repository = $github_options['repository'];
+        $path = $github_options['path'];
+        $db_path = '/' . $user . '/' . $repository . '/' . $path;
+
+        return DataSet::insert(array(
+            'path' => $db_path,
+        ));
+    }
+
     public function findByPath($user, $repository, $path)
     {
         return DataSet::find_by_path('/' . $user . '/' . $repository . '/' . $path);
