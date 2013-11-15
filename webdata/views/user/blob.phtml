@@ -13,49 +13,12 @@ $set = DataSet::findByPath($this->user, $this->repository, $this->path);
 <button id="btn-import-csv" data-wording-importing="匯入中...">匯入</button>
 <a href="https://github.com/<?= urlencode($this->user) ?>/<?= urlencode($this->repository) ?>/blob/<?= urlencode($this->branch) ?>/<?= $this->escape($this->path) ?>" target="_blank">Github原始頁</a>
 <?php if ($set and $set->getEAV('data_type') == 'geojson') { ?>
-<button id="btn-tab-list">顯示資料</button>
-<button id="btn-tab-map" data-boundary="<?= $this->escape($set->getEAV('boundary')) ?>">顯示地圖</button>
-<?php } ?>
-<?php if ($set) { ?>
-<div id="data-tab-list" class="data-tab">
-<table id="datagrid"></table>
-<div id="navGrid"></div>
-</div>
-<div 
-    id="data-tab-map"
-    class="data-tab"
-    style="display:none;width:100%;height:400px"
-    data-wms-url="/wms?Request=GetMap&Layers=<?= urlencode($set->getLayerID()) ?>"
-    data-click-url="/user/getdatafrompoint/?layer=<?= urlencode($set->getLayerID()) ?>"
-></div>
-<script language="javascript">
-var colNames = <?= json_encode(json_Decode($set->getEAV('columns'))) ?>;
-var colModel = [];
-for (var i = 0; i < colNames.length; i ++) {
-    colModel.push({name:i, index:i, width:55});
-    colNames[i] = (i + 1) + '.' + colNames[i];
-}
-var jqGridOptions = {
-        url:'/user/getdata/<?= $set->set_id ?>',
-        datatype: "json",
-        colNames:colNames,
-        cellEdit: true,
-        colModel:colModel,
-        rowNum:100,
-        rowList:[10,15,20,25,30,35,40],
-        pager: '#navGrid',
-        sortname: '0',
-        sortorder: "asc",
-        height: '400px',
-        autowidth: true,
-        viewrecords: true,
-        caption: <?= json_encode($set->getEAV('title')) ?>
-};
-jQuery("#datagrid").jqGrid(jqGridOptions);
-jQuery("#datagrid").jqGrid('navGrid','#navGrid',{edit:false,add:false,del:false});
-</script>
+<?= $this->partial('/user/blob_geojson.phtml', array('set' => $set)) ?>
+<?= $this->partial('/user/blob_csv.phtml', array('set' => $set)) ?>
+<?= $this->partial('/user/blob_map.phtml', array('set' => $set)) ?>
+<?php } elseif ($set) { ?>
+<?= $this->partial('/user/blob_csv.phtml', array('set' => $set)) ?>
 <?php } else { ?>
 <pre id="blob-content" class="pre"></pre>
 <?php } ?>
-
 <?= $this->partial('common/footer.phtml', $this); ?>
