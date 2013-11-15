@@ -11,6 +11,7 @@ class Helper
             register_shutdown_function(array('Helper', 'deleteTmpFile'));
         }
         $file_name = tempnam('', 'HelperGetTmpFile-');
+        unlink($file_name);
         self::$_tmp_file_used[] = $file_name;
         return $file_name;
     }
