@@ -72,6 +72,7 @@ class Importer_JSON
 
             GeoPoint::getDb()->query("DELETE FROM geo_point WHERE group_id = {$set->set_id}");
             GeoPoint::getDb()->query("INSERT INTO geo_point (group_id, geo, data_id) SELECT set_id, ST_Point((data->>{$lng_id})::numeric, (data->>{$lat_id})::numeric), id FROM data_line WHERE set_id = {$data_set->set_id}");
+            $set->countBoundary();
             return 1;
 
         case 'Topology':
