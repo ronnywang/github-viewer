@@ -20,7 +20,9 @@ class Importer_JSON
         $content_obj = Importer::getContent($github_options);
         if ($set = DataSet::findByOptions($github_options) and $content_obj->sha == $set->getEAV('sha')) {
             // 沒改變，不需要重新整理
-            return 0;
+            if (!$_GET['force']) {
+                return 0;
+            }
         }
 
         if ($content_obj->content) {
