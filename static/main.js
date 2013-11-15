@@ -82,8 +82,8 @@ console.log(b);
     map.fitBounds(bounds);
   } else {
     myLatlng = new google.maps.LatLng(lat, lng);
-    map.setLatlng(myLatlng);
-    map.setoom(zoom);
+    map.setCenter(myLatlng);
+    map.setZoom(zoom);
   }
 
   var infowindow = new google.maps.InfoWindow({
