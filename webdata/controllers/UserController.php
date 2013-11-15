@@ -100,6 +100,11 @@ class UserController extends Pix_Controller
         $repository = $_GET['repository'];
         $path = $_GET['path'];
         $db_path = '/' . $user . '/' . $repository . '/' . $path;
+        $github_options = array(
+            'user' => $user,
+            'repository' => $repos,
+            'path' => $path,
+        );
 
         if (preg_match('#json$#', $path)) {
             // JSON
@@ -109,21 +114,7 @@ class UserController extends Pix_Controller
             return $this->json(array('error' => true, 'message' => '不確定檔案格式，無法匯入'));
         }
 
-
-        $url = 'https://api.github.com/repos/' . urlencode($user) . '/' . urlencode($repository) . '/contents/' . urlencode($path);
-        $curl = curl_init($url);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: token ' . getenv('GITHUB_TOKEN')));
-        $ret = curl_exec($curl);
-
-        if (!$ret = json_decode($ret)){
-            return $this->json(array('message' => 'failed', 'error' => 1));
-        }
-
-        if ($ret->message == 'Not Found') {
-            DataSet::search(array('path' => $db_path))->delete();
-            return $this->json(array('message' => 'File not found', 'error' => true));
-        }
+        $ret = Importer::getContent($github_options);
 
         try {
             $set = DataSet::insert(array(
