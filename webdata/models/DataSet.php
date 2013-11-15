@@ -13,7 +13,8 @@ class DataSetRow extends Pix_Table_Row
             $res = DataGeometry::GetDb()->query("SELECT ST_Extent(geo::geometry) AS boundary FROM data_geometry WHERE set_id = {$this->set_id}");
             $row = $res->fetch_assoc();
         } elseif ($this->getEAV('data_type') == 'csvmap') {
-            $res = GeoPoint::GetDb()->query("SELECT ST_Extent(geo::geometry) AS boundary FROM geo_point WHERE group_id = {$this->set_id}");
+            $data_set_id = $this->getEAV('data_from');
+            $res = GeoPoint::GetDb()->query("SELECT ST_Extent(geo::geometry) AS boundary FROM geo_point WHERE group_id = {$data_set_id}");
             $row = $res->fetch_assoc();
         }
         if (!preg_match('#BOX\(([-0-9\.]*) ([-0-9\.]*),([-0-9\.]*) ([-0-9\.]*)\)#', $row['boundary'], $matches)) {
