@@ -131,34 +131,17 @@ class UserController extends Pix_Controller
 
         if ($ret->content) {
             $content = base64_decode($ret->content);
+            $file_path = Helper::getTmpFile();
+            file_put_contents($file_path, $content);
         } else {
-            $url = $ret->git_url;
-            $curl = curl_init($url);
-            $fp = tmpfile();
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_FILE, $fp);
-            curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: token ' . getenv('GITHUB_TOKEN')));
-            curl_exec($curl);
-            curl_close($curl);
-            fflush($fp);
-
-            // 這邊解 base64 真的只能求助外部啊 orz
-            $script_file = __DIR__ . '/../scripts/geojson_parse.js';
-            $cmd = "node " . escapeshellarg($script_file) . " get_content " . escapeshellarg(stream_get_meta_data($fp)['uri']);
-            exec($cmd, $outputs, $ret);
-            $content = implode("\n", $outputs);
-
-            fclose($fp);
+            $file_path = Importer::getFullBodyFilePath($ret);
         }
 
-        $fp = tmpfile();
-        fputs($fp, $content);
-        rewind($fp);
 
         if (preg_match('#json$#', $path)) {
-            $this->importJSON($fp, $set);
+            $this->importJSON($file_path, $set);
         } elseif (preg_match('#\.csv$#', $path)) {
-            $this->importCSV($fp, $set);
+            $this->importCSV($file_path, $set);
         }
     }
 
@@ -220,10 +203,10 @@ class UserController extends Pix_Controller
         }
     }
 
-    protected function importJSON($fp, $set)
+    protected function importJSON($file_path, $set)
     {
         $script_file = __DIR__ . '/../scripts/geojson_parse.js';
-        $cmd = "node " . escapeshellarg($script_file) . " get_type " . escapeshellarg(stream_get_meta_data($fp)['uri']);
+        $cmd = "node " . escapeshellarg($script_file) . " get_type " . escapeshellarg($file_path);
         exec($cmd, $outputs, $ret);
 
         if ($ret) {
@@ -238,30 +221,28 @@ class UserController extends Pix_Controller
         if ($type == 'Topology') {
             $columns[] = '_path';
             // TopoJSON 直接丟，因為應該是不會大到無法處理..
-            $json = fgets($fp);
+            $json = file_get_contents($file_path);
             $geojsons = GeoTopoJSON::toGeoJSONs(strval($json));
             foreach ($geojsons as $topo_id => $geojson) {
                 $inserted = $this->importGeoJSON($geojson, $set, $topo_id, $columns);
             }
         } elseif ($type == 'FeatureCollection') {
-            $target_path = stream_get_meta_data($fp)['uri'] . '.features';
+            $target_path = Helper::getTmpFile();
             mkdir($target_path);
-            $cmd = "node " . escapeshellarg($script_file) . " split_feature " . escapeshellarg(stream_get_meta_data($fp)['uri']) . ' ' . escapeshellarg($target_path);
+            $cmd = "node " . escapeshellarg($script_file) . " split_feature " . escapeshellarg($file_path) . ' ' . escapeshellarg($target_path);
             exec($cmd, $outputs, $ret);
 
             if ($ret) {
-                return $this->json(array('error' => true, 'message' => 'Invalid JSON'));
+                return $this->json(array('error' => true, 'message' => 'Invalid FeatureCollection JSON'));
             }
 
             foreach (glob($target_path . '/*.json') as $feature_file) {
                 $feature = json_decode(file_get_contents($feature_file));
                 $inserted += $this->importGeoJSON($feature, $set, null, $columns);
-                unlink($feature_file);
             }
-            rmdir($target_path);
         } else {
             // 其他的直接 json_decode 就好了
-            $json = fgets($fp);
+            $json = file_get_contents($file_path);
             $inserted = $this->importGeoJSON(json_decode($json), $set, null, $columns);
         }
 
@@ -272,8 +253,9 @@ class UserController extends Pix_Controller
         return $this->json(array('error' => 0, 'count' => $inserted, 'columns' => $columns));
     }
 
-    protected function importCSV($fp, $set)
+    protected function importCSV($file_path, $set)
     {
+        $fp = fopen($file_path, 'r');
         $columns = fgetcsv($fp);
         $set->setEAV('columns', json_encode($columns));
 
