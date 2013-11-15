@@ -78,6 +78,16 @@ class DataSet extends Pix_Table
         $this->addIndex('path', array('path'), 'unique');
     }
 
+    public function findByOptions($github_options)
+    {
+        $user = $github_options['user'];
+        $repository = $github_options['repository'];
+        $path = $github_options['path'];
+        // TODO: add branch
+
+        return DataSet::find_by_path('/' . $user . '/' . $repository . '/' . $path);
+    }
+
     public function findByPath($user, $repository, $path)
     {
         return DataSet::find_by_path('/' . $user . '/' . $repository . '/' . $path);
