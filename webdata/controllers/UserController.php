@@ -47,12 +47,13 @@ class UserController extends Pix_Controller
                 return $this->json(array('error' => true, 'message' => 'not found'));
             }
 
-            if (!$data_line = DataLine::search(array('set_id' => $set->set_id, 'id' => $row['data_id']))->first()) {
+            $data_set = DataSet::find($set->getEAV('data_from'));
+            if (!$data_line = DataLine::search(array('set_id' => $data_set->set_id, 'id' => $row['data_id']))->first()) {
                 $columns = array('錯誤', 'data_id');
                 $values = array('找不到這筆資料', $data_id);
                 return $this->json(array('error' => false, 'columns' => $columns, 'values' => $values));
             }
-            return $this->json(array('error' => false, 'columns' => json_decode($set->getEAV('columns')), 'values' => json_decode($data_line->data)));
+            return $this->json(array('error' => false, 'columns' => json_decode($data_set->getEAV('columns')), 'values' => json_decode($data_line->data)));
         }
     }
 

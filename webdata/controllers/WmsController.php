@@ -44,7 +44,7 @@ class WmsController extends Pix_Controller
         $options['max_lat'] = floatval($max_lat);
         $options['text'] = "POLYGON(({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},{$options['min_lng']} {$options['min_lat']}))";
         $layer_data = json_decode($layers);
-        if ($layer_data->type == 'csv') {
+        if ($layer_data->type == 'csvmap') {
             return $this->drawCSV(intval($layer_data->set_id), $options);
         } elseif ($layer_data->type == 'geojson') {
             return $this->drawGeoJSON(intval($layer_data->set_id), $options);
