@@ -109,7 +109,8 @@ class UserController extends Pix_Controller
         if (preg_match('#json$#', $path)) {
             // JSON
         } elseif (preg_match('#\.csv$#', $path)) {
-            // CSV
+            $count = Importer_CSV::import($github_options);
+            return $this->json(array('error' => false, 'count' => $count));
         } else {
             return $this->json(array('error' => true, 'message' => '不確定檔案格式，無法匯入'));
         }
@@ -141,7 +142,6 @@ class UserController extends Pix_Controller
         if (preg_match('#json$#', $path)) {
             $this->importJSON($file_path, $set);
         } elseif (preg_match('#\.csv$#', $path)) {
-            $this->importCSV($file_path, $set);
         }
     }
 
@@ -251,24 +251,6 @@ class UserController extends Pix_Controller
         $set->countBoundary();
 
         return $this->json(array('error' => 0, 'count' => $inserted, 'columns' => $columns));
-    }
-
-    protected function importCSV($file_path, $set)
-    {
-        $fp = fopen($file_path, 'r');
-        $columns = fgetcsv($fp);
-        $set->setEAV('columns', json_encode($columns));
-
-        DataLine::getDb()->query("DELETE FROM data_line WHERE set_id = {$set->set_id}");
-
-        $insert_rows = array();
-        while ($row = fgetcsv($fp)){
-            $insert_rows[] = array($set->set_id, json_encode($row));
-        }
-        if ($insert_rows) {
-            DataLine::bulkInsert(array('set_id', 'data'), $insert_rows);
-        }
-        return $this->json(array('error' => 0));
     }
 
     public function blobAction($params)
