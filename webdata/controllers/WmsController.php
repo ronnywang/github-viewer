@@ -95,7 +95,8 @@ class WmsController extends Pix_Controller
     protected function drawGeoJSON($set_id, $options)
     {
         if (!$dataset = DataSet::find($set_id)) {
-            echo '404';
+            header('Content-Type: image/png');
+            echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
             return $this->noview();
         }
 
@@ -116,6 +117,8 @@ class WmsController extends Pix_Controller
         $res->free_result();
 
         if (!count($geojsons)) {
+            header('Content-Type: image/png');
+            echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
             return $this->noview();
         }
 
