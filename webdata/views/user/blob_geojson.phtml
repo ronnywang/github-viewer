@@ -5,7 +5,7 @@
     class="data-tab"
     style="display:none;width:100%;height:400px"
     data-wms-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetMap&Layers=<?= urlencode($this->set->getLayerID()) ?>"
-    data-click-url="<?= getenv('CDN_PREFIX') ?>/user/getdatafrompoint/?layer=<?= urlencode($this->set->getLayerID()) ?>"
+    data-click-url="/user/getdatafrompoint/?layer=<?= urlencode($this->set->getLayerID()) ?>"
     data-clickzone-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetClickZone&Layers=<?= urlencode($this->set->getLayerID()) ?>"
 ></div>
 <?= $this->partial('/user/blob_csv.phtml', array('set' => $this->set)) ?>
