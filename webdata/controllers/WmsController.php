@@ -57,21 +57,11 @@ class WmsController extends Pix_Controller
             echo '404';
             return $this->noview();
         }
-        $lng_delta = $options['max_lng'] - $options['min_lng'];
 
-        if ($lng_delta < 0.01) {
-            $tolerance = "0.000001";
-        } else if ($lng_delta < 0.1) {
-            $tolerance = "0.00001";
-        } else if ($lng_delta < 1) {
-            $tolerance = "0.0001";
-        } else if ($lng_delta < 10) {
-            $tolerance = "0.001";
-        } else {
-            $tolerance = "0.01";
-        }
+        $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
+        $pixel = ($boundry[1] - $boundry[0]) / $options['width'];
 
-        $sql = "SELECT id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$tolerance})) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
+        $sql = "SELECT id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$pixel})) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
         //$sql = "SELECT MIN(data_id) AS data_id, ST_AsGeoJSON(ST_Centroid(ST_Collect(geo::geometry))) AS geojson FROM (SELECT kmeans(ARRAY[ST_X(geo::geometry), ST_Y(geo::geometry)], 1000) OVER (), geo, data_id FROM geo_point WHERE group_id = {$group_id} AND geo && ST_GeomFromText('$text')) AS ksub GROUP BY kmeans";
         //error_log($sql);
         $res = DataGeometry::getDb()->query($sql);
@@ -94,7 +84,11 @@ class WmsController extends Pix_Controller
         foreach ($geojsons as $id => $geojson) {
             $feature = new StdClass;
             $feature->type = 'Feature';
-            $feature->properties = array('background_color' => array(0,0,0), 'border_color' => array(100, 0, 0));
+            $feature->properties = array(
+                'background_color' => array(0,0,0),
+                'border_color' => array(100, 0, 0),
+                'border_size' => 2,
+            );
             $feature->geometry = json_decode($geojson);
             $features[] = $feature;
         }
@@ -126,25 +120,18 @@ class WmsController extends Pix_Controller
             echo '404';
             return $this->noview();
         }
-        $lng_delta = $options['max_lng'] - $options['min_lng'];
+        $time = array(microtime(true));
 
-        if ($lng_delta < 0.01) {
-            $tolerance = "0.000001";
-        } else if ($lng_delta < 0.1) {
-            $tolerance = "0.00001";
-        } else if ($lng_delta < 1) {
-            $tolerance = "0.0001";
-        } else if ($lng_delta < 10) {
-            $tolerance = "0.001";
-        } else {
-            $tolerance = "0.01";
-        }
+        $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
+        $pixel = ($boundry[1] - $boundry[0]) / $options['width'];
+        $radius = 5 * $pixel;
 
-        $sql = "SELECT data_id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$tolerance})) AS geojson FROM geo_point WHERE group_id = {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
-        //$sql = "SELECT MIN(data_id) AS data_id, ST_AsGeoJSON(ST_Centroid(ST_Collect(geo::geometry))) AS geojson FROM (SELECT kmeans(ARRAY[ST_X(geo::geometry), ST_Y(geo::geometry)], 1000) OVER (), geo, data_id FROM geo_point WHERE group_id = {$group_id} AND geo && ST_GeomFromText('$text')) AS ksub GROUP BY kmeans";
-        //error_log($sql);
+        $sql = "SELECT data_id, ST_AsGeoJSON(ST_SnapToGrid(geo::geometry, {$pixel})) AS geojson FROM geo_point WHERE group_id = {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
+
+        //$sql = "SELECT ST_AsGeoJSON(ST_Buffer(ST_UnaryUnion(ST_SnapToGrid(ST_Collect(geo::geometry), 0.1)), {$radius}, 4)) AS geojson FROM geo_point WHERE group_id = {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
         $res = GeoPoint::getDb()->query($sql);
         $time[1] = microtime(true);
+        $ret = $res->fetch_assoc();
 
         $json = new StdClass;
         $json->type = 'FeatureCollection';
@@ -152,7 +139,12 @@ class WmsController extends Pix_Controller
         $features = array();
         //echo $sql . "\n";
         $geojsons = array();
+        $points = array();
         while ($row = $res->fetch_assoc()) {
+            if ($points[crc32($row['geojson'])]) {
+                continue;
+            }
+            $points[crc32($row['geojson'])] = true;
             $geojsons[$row['data_id']] = $row['geojson'];
         }
         $res->free_result();
@@ -186,8 +178,7 @@ class WmsController extends Pix_Controller
             $time[2] -$time[1],
             count($records),
             $time[3] - $time[2],
-            $bbox));
-         */
+            $bbox));*/
 
         return $this->noview();
     }
