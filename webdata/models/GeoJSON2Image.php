@@ -258,6 +258,13 @@ class GeoJSON2Image
             break;
 
         case 'MultiPoint':
+            foreach ($json->coordinates as $coordinate) {
+                $j = new StdClass;
+                $j->type = 'Point';
+                $j->coordinates = $coordinates;
+                self::drawJSON($gd, $j, $boundry, $max_size, $draw_options);
+            }
+            break;
         case 'LineString':
         case 'MultiLineString':
         default:
