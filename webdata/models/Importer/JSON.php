@@ -9,7 +9,8 @@ class Importer_JSON
         } catch (Pix_Table_DuplicateException $e) {
             $set = DataSet::findByOptions($github_options);
         }
-        DataLine::search(array('set_id' => $set->set_id))->delete();
+        DataLine::getDb()->query("DELETE FROM data_line WHERE set_id = {$set->set_id}");
+        DataGeometry::getDb()->query("DELETE FROM data_geometry WHERE set_id={$set->set_id}");
         $set->lines->delete();
         $set->setEAV('sha', $sha);
         return $set;
