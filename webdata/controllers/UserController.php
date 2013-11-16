@@ -28,6 +28,36 @@ class UserController extends Pix_Controller
                 return $this->json(array('error' => false, 'columns' => $columns, 'values' => $values));
             }
             return $this->json(array('error' => false, 'columns' => json_decode($set->getEAV('columns')), 'values' => json_decode($data_line->data)));
+        } elseif ($layer->type == 'colormap') {
+            if (!$set = DataSet::find(intval($layer->set_id))) {
+                return $this->redirect('/');
+            }
+            if (!$mapset = DataSet::find($set->getEAV('map_from'))) {
+                return $this->redirect('/');
+            }
+            if (!$dataset = DataSet::find($set->getEAV('data_from'))){
+                return $this->redirect('/');
+            }
+            $sql = "SELECT id FROM data_geometry WHERE set_id = {$mapset->set_id} AND geo && ST_PointFromText('POINT({$lng} {$lat})', 4326)";
+            $res = DataGeometry::getDb()->query($sql);
+            if (!$row = $res->fetch_assoc()) {
+                return $this->json(array('error' => true, 'message' => 'not found'));
+            }
+
+            $id_map = json_decode($set->getEAV('id_map'));
+            $id_map = array_combine($id_map[0], $id_map[1]);
+
+            if (!array_key_exists($row['id'], $id_map)) {
+                return $this->json(array('error' => true, 'message' => 'not found'));
+            }
+
+            if (!$data_line = DataLine::find($id_map[$row['id']])) {
+                $columns = array('錯誤', 'data_id');
+                $values = array('找不到這筆資料', $row['id']);
+                return $this->json(array('error' => false, 'columns' => $columns, 'values' => $values));
+            }
+            return $this->json(array('error' => false, 'columns' => json_decode($dataset->getEAV('columns')), 'values' => json_decode($data_line->data)));
+
         } else {
             if (!$set = DataSet::find(intval($layer->set_id))) {
                 return $this->redirect('/');

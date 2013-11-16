@@ -70,6 +70,8 @@ class WmsController extends Pix_Controller
         $layer_data = json_decode($layers);
         if ($layer_data->type == 'csvmap') {
             return $this->drawCSV(intval($layer_data->set_id), $options);
+        } elseif ($layer_data->type == 'colormap') {
+            return $this->drawColorMap(intval($layer_data->set_id), $options);
         } elseif ($layer_data->type == 'geojson') {
             return $this->drawGeoJSON(intval($layer_data->set_id), $options);
         }
@@ -92,6 +94,102 @@ class WmsController extends Pix_Controller
         return $this->json($json);
     }
 
+    protected function drawColorMap($set_id, $options)
+    {
+        if (!$dataset = DataSet::find($set_id)) {
+            header('Content-Type: image/png');
+            echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
+            return $this->noview();
+        }
+
+        if (!$mapset = DataSet::find($dataset->getEAV('map_from'))) {
+            header('Content-Type: image/png');
+            echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
+            return $this->noview();
+        }
+
+        $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
+        $pixel = ($boundry[1] - $boundry[0]) / $options['width'];
+
+        $sql = "SELECT id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$pixel})) AS geojson FROM data_geometry WHERE set_id= {$mapset->set_id} AND geo && ST_GeomFromText('{$options['text']}')";
+        $res = DataGeometry::getDb()->query($sql);
+
+        $id_map = json_decode($dataset->getEAV('id_map'));
+        $id_map = array_combine($id_map[0], $id_map[1]);
+
+        $json = new StdClass;
+        $json->type = 'FeatureCollection';
+
+        $features = array();
+        $geojsons = array();
+        $data_ids = array();
+        while ($row = $res->fetch_assoc()) {
+            if (array_key_exists($row['id'], $id_map)) {
+                $geojsons[$id_map[$row['id']]] = $row['geojson'];
+                $data_ids[] = $id_map[$row['id']];
+            }
+        }
+        $res->free_result();
+
+        if (!count($geojsons)) {
+            header('Content-Type: image/png');
+            echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
+            return $this->noview();
+        }
+
+        $config = json_decode($dataset->getEAV('config'));
+        $min_value1 = floatval($config->value1->min);
+        $max_value1 = floatval($config->value1->max);
+        $color1 = $color2 = $config->value1->color;
+
+        $sql = "SELECT id, data->>{$config->value1->column_id} FROM data_line WHERE id IN (" . implode(",", $data_ids) .")";
+        $res = DataLine::getDb()->query($sql);
+
+        while ($row = $res->fetch_array()){
+            $id = array_shift($row);
+            if (floatval($row[0]) < 0) {
+                $rate  = 1.0 * floatval($row[0] - $min_value1) / ($max_value1 - $min_value1);
+                $color = $color2;
+            } else {
+                $rate  = 1.0 * floatval($row[0] - $min_value1) / ($max_value1 - $min_value1);
+                $color = $color1;
+            }
+            $rgb = array();
+            for ($i = 0; $i < 3; $i ++) {
+                $rgb[$i] = floor(255 - (255 - intval($color[$i])) * $rate);
+            }
+
+            $feature = new StdClass;
+            $feature->type = 'Feature';
+            $feature->properties = array(
+                'background_color' => $rgb,
+                'border_color' => array(100, 0, 0),
+                'border_size' => 1,
+            );
+            $feature->geometry = json_decode($geojsons[$id]);
+            $features[] = $feature;
+        }
+        $json->features = $features;
+
+        $obj = new GeoJSON2Image($json);
+        $obj->setSize($options['width']);
+        $obj->setBoundry(array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']));
+        $obj->draw();
+
+        $time[3] = microtime(true);
+
+        /*error_log(sprintf("total: %f, pgsql: %f(%d), mysql: %f(%d), png: %f, bbox: %s",
+            $time[3] - $time[0],
+            $time[1] - $time[0],
+            count($geojsons),
+            $time[2] -$time[1],
+            count($records),
+            $time[3] - $time[2],
+            $bbox));
+         */
+
+        return $this->noview();
+    }
     protected function drawGeoJSON($set_id, $options)
     {
         if (!$dataset = DataSet::find($set_id)) {

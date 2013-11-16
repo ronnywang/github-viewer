@@ -16,6 +16,8 @@ $set = DataSet::findByPath($this->user, $this->repository, $this->path);
 <?= $this->partial('/user/blob_geojson.phtml', array('set' => $set)) ?>
 <?php } elseif ($set and $set->getEAV('data_type') == 'csvmap') { ?>
 <?= $this->partial('/user/blob_csvmap.phtml', array('set' => $set)) ?>
+<?php } elseif ($set and $set->getEAV('data_type') == 'colormap') { ?>
+<?= $this->partial('/user/blob_colormap.phtml', array('set' => $set)) ?>
 <?php } elseif ($set) { ?>
 <?= $this->partial('/user/blob_csv.phtml', array('set' => $set)) ?>
 <?php } else { ?>
