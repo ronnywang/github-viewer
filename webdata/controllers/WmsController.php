@@ -40,8 +40,7 @@ class WmsController extends Pix_Controller
         if ($layer_data->type == 'csvmap') {
             return $this->getCSVClickZone(intval($layer_data->set_id), $options);
         } elseif ($layer_data->type == 'geojson') {
-            // GeoJSON 好像不需要 click zone
-            return $this->json(0);
+            return $this->getGeoJSONClickZone(intval($layer_data->set_id), $options);
         }
     }
 
@@ -74,6 +73,23 @@ class WmsController extends Pix_Controller
         } elseif ($layer_data->type == 'geojson') {
             return $this->drawGeoJSON(intval($layer_data->set_id), $options);
         }
+    }
+
+    protected function getGeoJSONClickZone($set_id, $options)
+    {
+        if (!$dataset = DataSet::find($set_id)) {
+            return $this->json(0);
+        }
+
+        $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
+        $pixel = ($boundry[1] - $boundry[0]) / $options['width'];
+
+        $sql = "SELECT ST_AsGeoJSON(ST_UnaryUnion(ST_Collect(ST_Buffer(ST_Simplify(geo::geometry, {$pixel}), {$pixel} * 2)))) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
+        $res = DataGeometry::getDb()->query($sql);
+        $ret = $res->fetch_assoc();
+        $json = json_decode($ret['geojson']);
+
+        return $this->json($json);
     }
 
     protected function drawGeoJSON($set_id, $options)
