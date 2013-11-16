@@ -137,7 +137,7 @@ main.onload_user_blob = function(){
       main.map_is_showed = true;
       main.show_map();
     }
-    $('#data-tab-map').height($(window).height() - $('#data-tab-map').position().top - 30);
+    $('#data-tab-map').height(600);
   });
   $('#btn-import-csv').click(function(e){
     $(this).text($(this).attr('data-wording-importing'));
