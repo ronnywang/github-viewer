@@ -97,15 +97,11 @@ class WmsController extends Pix_Controller
     protected function drawColorMap($set_id, $options)
     {
         if (!$dataset = DataSet::find($set_id)) {
-            header('Content-Type: image/png');
-            echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
-            return $this->noview();
+            return $this->emptyImage();
         }
 
         if (!$mapset = DataSet::find($dataset->getEAV('map_from'))) {
-            header('Content-Type: image/png');
-            echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
-            return $this->noview();
+            return $this->emptyImage();
         }
 
         $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
@@ -132,9 +128,7 @@ class WmsController extends Pix_Controller
         $res->free_result();
 
         if (!count($geojsons)) {
-            header('Content-Type: image/png');
-            echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
-            return $this->noview();
+            return $this->emptyImage();
         }
 
         $config = json_decode($dataset->getEAV('config'));
@@ -193,9 +187,7 @@ class WmsController extends Pix_Controller
     protected function drawGeoJSON($set_id, $options)
     {
         if (!$dataset = DataSet::find($set_id)) {
-            header('Content-Type: image/png');
-            echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
-            return $this->noview();
+            return $this->emptyImage();
         }
 
         $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
@@ -215,9 +207,7 @@ class WmsController extends Pix_Controller
         $res->free_result();
 
         if (!count($geojsons)) {
-            header('Content-Type: image/png');
-            echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
-            return $this->noview();
+            return $this->emptyImage();
         }
 
         foreach ($geojsons as $id => $geojson) {
@@ -274,9 +264,7 @@ class WmsController extends Pix_Controller
     protected function drawCSV($set_id, $options)
     {
         if (!$dataset = DataSet::find($set_id)) {
-            header('Content-Type: image/png');
-            echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
-            return $this->noview();
+            return $this->emptyImage();
         }
         $time = array(microtime(true));
 
@@ -305,9 +293,7 @@ class WmsController extends Pix_Controller
         $res->free_result();
 
         if (!count($geojsons)) {
-            header('Content-Type: image/png');
-            echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
-            return $this->noview();
+            return $this->emptyImage();
         }
 
         $time[2] = microtime(true);
@@ -337,6 +323,13 @@ class WmsController extends Pix_Controller
             $time[3] - $time[2],
             $bbox));*/
 
+        return $this->noview();
+    }
+
+    protected function emptyImage()
+    {
+        header('Content-Type: image/png');
+        echo base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=');
         return $this->noview();
     }
 }
