@@ -45,6 +45,101 @@ class Importer_JSON
 
         $inserted = 0;
         switch ($type) {
+        case 'ColorMap':
+            if (!$json = json_decode(file_get_contents($file_path))) {
+                throw new Importer_Exception("Invalid ColorMap JSON");
+            }
+
+            // 檢查 map_file
+            list($user, $repository, $path) = explode("/", $json->map_file, 3);
+            if (!preg_match('#json$#', $path)) {
+                throw new Importer_Exception("map_file must be json");
+            }
+            $mapfile_github_options = array(
+                'user' => $user,
+                'repository' => $repository,
+                'path' => $path,
+            );
+            Importer_CSV::import($mapfile_github_options);
+            $mapfile_set = DataSet::findByOptions($mapfile_github_options);
+            $mapfile_columns = json_decode($mapfile_set->getEAV('columns'));
+            $map_columns = is_array($json->map_columns) ? $json->map_columns : array($json->map_columns);
+            $map_column_ids = array();
+            foreach ($map_columns as $map_column) {
+                if (false === ($id = array_search(strval($map_column), $mapfile_columns))) {
+                    throw new Importer_Exception("data must be lat column name");
+                }
+                $map_column_ids[] = $id;
+            }
+
+            // 檢查 data_file
+            list($user, $repository, $path) = explode("/", $json->data_file, 3);
+            if (!preg_match('#\.csv$#', $path)) {
+                throw new Importer_Exception("data_file must be csv");
+            }
+            $datafile_github_options = array(
+                'user' => $user,
+                'repository' => $repository,
+                'path' => $path,
+            );
+            Importer_CSV::import($datafile_github_options);
+            $datafile_set = DataSet::findByOptions($datafile_github_options);
+            $datafile_columns = json_decode($datafile_set->getEAV('columns'));
+            $data_columns = is_array($json->data_columns) ? $json->data_columns : array($json->data_columns);
+            $data_column_ids = array();
+            foreach ($data_columns as $data_column) {
+                if (false === ($id = array_search(strval($data_column), $datafile_columns))) {
+                    throw new Importer_Exception("data must be lat column name");
+                }
+                $data_column_ids[] = $id;
+            }
+
+            if (count($data_column_ids) != count($map_column_ids)) {
+                throw new Importer_Exception("data_columns size must be equal map_columns size");
+            }
+
+            $sql = "SELECT id, " . implode(', ', array_map(function($i){ return 'data->>' . $i; }, $data_column_ids)) . " FROM data_line WHERE set_id = {$datafile_set->set_id}";
+            $res = DataLine::getDb()->query($sql);
+            $data_ids = array();
+            while ($row = $res->fetch_array()) {
+                $id = array_shift($row);
+                $data_ids[json_encode($row)] = $id;
+            }
+            $res->free_result();
+
+            $sql = "SELECT id, " . implode(', ', array_map(function($i){ return 'data->>' . $i; }, $map_column_ids)) . " FROM data_line WHERE set_id = {$mapfile_set->set_id}";
+            $res = DataLine::getDb()->query($sql);
+            $id_map = array(array(), array());
+            $id_miss = array(array(), array());
+
+            while ($row = $res->fetch_array()) {
+                $id = array_shift($row);
+                $location_id = json_encode($row);
+
+                if (array_key_exists($location_id, $data_ids)) {
+                    $id_map[0][] = $id;
+                    $id_map[1][] = $data_ids[$location_id];
+                    unset($data_ids[$location_id]);
+                } else {
+                    $id_miss[0][] = implode(",", $row);
+                }
+            }
+            $id_miss[1] = array_map(function($i){ return implode(',', json_decode($i)); }, array_keys($data_ids));
+
+            if (false === ($id = array_search(strval($json->value1->column), $datafile_columns))) {
+                throw new Importer_Exception("data must be lat column name");
+            }
+            $json->value1->column_id = $id;
+
+            $set = self::getSetAndUpdateSHA($github_options, $content_obj->sha);
+            $set->setEAV('data_from', $datafile_set->set_id);
+            $set->setEAV('map_from', $mapfile_set->set_id);
+            $set->setEAV('id_miss', json_encode($id_miss));
+            $set->setEAV('id_map', json_encode($id_map));
+            $set->setEAV('config', json_encode($json));
+            $set->setEAV('data_type', 'colormap');
+            return count($id_map[0]);
+
         case 'CSVMap':
             if (!$json = json_decode(file_get_contents($file_path))) {
                 throw new Importer_Exception("Invalid CSVMap JSON");
