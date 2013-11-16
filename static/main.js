@@ -149,7 +149,6 @@ console.log(b);
   }
 
   var infowindow = new google.maps.InfoWindow({
-    maxWidth: '500px'
   });
   var marker = new google.maps.Marker({
     map: map
@@ -157,8 +156,9 @@ console.log(b);
 
   var click_event = function(e){
    $.get($('#data-tab-map').attr('data-click-url') + '&lat=' + e.latLng.lat() + '&lng=' + e.latLng.lng(), function(ret){
-     var span_dom = $('<span></span>');
-     span_dom.empty();
+     var div_dom = $('<div></div>');
+     div_dom.css({'width': '100%', 'max-height':'250px', 'overflow': 'scroll'});
+     div_dom.empty();
      if (ret.error) {
        console.log(ret.message);
        infowindow.setMap(null);
@@ -167,10 +167,10 @@ console.log(b);
        for (var i = 0; i < ret.columns.length; i ++) {
          li_dom = $('<div></div>');
          li_dom.text(ret.columns[i] + ':' + ret.values[i]);
-         span_dom.append(li_dom);
+         div_dom.append(li_dom);
        }
      }
-     infowindow.setContent(span_dom.html());
+     infowindow.setContent($('<div></div>').append(div_dom).html());
      infowindow.open(map, marker);
      marker.setPosition(e.latLng);
      marker.setMap(map);
