@@ -7,13 +7,6 @@ class UserController extends Pix_Controller
         $this->view->user = $params['user'];
     }
 
-    public function importgeoAction()
-    {
-        // TODO: 要線上產生
-        $sql = "DELETE FROM geo_point WHERE group_id = 8;";
-        $sql = "INSERT INTO geo_point (group_id, geo, data_id) SELECT set_id, ST_Point((data->>7)::numeric, (data->>6)::numeric), id FROM data_line WHERE set_id = 8;";
-    }
-
     public function getdatafrompointAction()
     {
         $layer = json_decode($_GET['layer']);
@@ -132,19 +125,5 @@ class UserController extends Pix_Controller
         $this->view->repository = $params['repository'];
         $this->view->path = $params['path'];
         $this->view->branch = $params['branch'];
-    }
-
-    public function mapAction($params)
-    {
-        $this->view->user = $params['user'];
-        $this->view->repository = $params['repository'];
-        $this->view->branch = $params['branch'];
-        $this->view->path = $params['path'];
-
-        if (!$set = DataSet::findByPath($params['user'], $params['repository'], $params['path'])) {
-            return $this->redirect('/');
-        }
-
-        $this->view->data_set = $set;
     }
 }
