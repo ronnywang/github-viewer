@@ -20,6 +20,31 @@ class WmsController extends Pix_Controller
         return $this->_lower_params[strtolower($key)];
     }
 
+    public function getclickzoneAction()
+    {
+        $options = array();
+        $layers = $this->getParam('layers');
+        // minx, miny, maxx, maxy
+        $bbox = $this->getParam('bbox');
+        $options['width'] = $this->getParam('width');
+        $options['height'] = $this->getParam('height');
+
+        list($min_lng, $min_lat, $max_lng, $max_lat) = explode(',', $bbox);
+        $options['min_lng'] = floatval($min_lng);
+        $options['max_lng'] = floatval($max_lng);
+        $options['min_lat'] = floatval($min_lat);
+        $options['max_lat'] = floatval($max_lat);
+        $options['text'] = "POLYGON(({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},{$options['min_lng']} {$options['min_lat']}))";
+
+        $layer_data = json_decode($layers);
+        if ($layer_data->type == 'csvmap') {
+            return $this->getCSVClickZone(intval($layer_data->set_id), $options);
+        } elseif ($layer_data->type == 'geojson') {
+            // GeoJSON 好像不需要 click zone
+            return $this->json(0);
+        }
+    }
+
     public function getmapAction()
     {
         $time = array();
@@ -114,6 +139,25 @@ class WmsController extends Pix_Controller
         return $this->noview();
     }
 
+    protected function getCSVClickZone($set_id, $options)
+    {
+        if (!$dataset = DataSet::find($set_id)) {
+            echo '404';
+            return $this->noview();
+        }
+        $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
+        $pixel = ($boundry[1] - $boundry[0]) / $options['width'];
+        $radius = 5 * $pixel;
+
+        $sql = "SELECT ST_AsGeoJSON(ST_Simplify(ST_Buffer(ST_UnaryUnion(ST_Collect(ST_SnapToGrid(geo::geometry, {$pixel}))), {$radius}, 4), $pixel)) AS geojson FROM geo_point WHERE group_id = {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
+        $sql = "SELECT ST_AsGeoJSON(ST_Simplify(ST_UnaryUnion(ST_Collect(ST_Buffer(geom, {$radius}))), $pixel)) AS geojson FROM (SELECT ST_SnapToGrid(geo::geometry, {$pixel}) AS geom FROM geo_point WHERE group_id = {$set_id} AND geo && ST_GeomFromText('{$options['text']}') GROUP BY geom) AS t";
+        $res = GeoPoint::getDb()->query($sql);
+        $ret = $res->fetch_assoc();
+        $json = json_decode($ret['geojson']);
+
+        return $this->json($json);
+    }
+
     protected function drawCSV($set_id, $options)
     {
         if (!$dataset = DataSet::find($set_id)) {
@@ -124,11 +168,9 @@ class WmsController extends Pix_Controller
 
         $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
         $pixel = ($boundry[1] - $boundry[0]) / $options['width'];
-        $radius = 5 * $pixel;
 
         $sql = "SELECT data_id, ST_AsGeoJSON(ST_SnapToGrid(geo::geometry, {$pixel})) AS geojson FROM geo_point WHERE group_id = {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
 
-        //$sql = "SELECT ST_AsGeoJSON(ST_Buffer(ST_UnaryUnion(ST_SnapToGrid(ST_Collect(geo::geometry), 0.1)), {$radius}, 4)) AS geojson FROM geo_point WHERE group_id = {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
         $res = GeoPoint::getDb()->query($sql);
         $time[1] = microtime(true);
         $ret = $res->fetch_assoc();
