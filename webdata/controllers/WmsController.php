@@ -87,15 +87,12 @@ class WmsController extends Pix_Controller
         $pixel = ($boundry[1] - $boundry[0]) / $options['width'];
 
         $sql = "SELECT id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$pixel})) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
-        //$sql = "SELECT MIN(data_id) AS data_id, ST_AsGeoJSON(ST_Centroid(ST_Collect(geo::geometry))) AS geojson FROM (SELECT kmeans(ARRAY[ST_X(geo::geometry), ST_Y(geo::geometry)], 1000) OVER (), geo, data_id FROM geo_point WHERE group_id = {$group_id} AND geo && ST_GeomFromText('$text')) AS ksub GROUP BY kmeans";
-        //error_log($sql);
         $res = DataGeometry::getDb()->query($sql);
 
         $json = new StdClass;
         $json->type = 'FeatureCollection';
 
         $features = array();
-        //echo $sql . "\n";
         $geojsons = array();
         while ($row = $res->fetch_assoc()) {
             $geojsons[$row['id']] = $row['geojson'];
@@ -149,7 +146,6 @@ class WmsController extends Pix_Controller
         $pixel = ($boundry[1] - $boundry[0]) / $options['width'];
         $radius = 5 * $pixel;
 
-        $sql = "SELECT ST_AsGeoJSON(ST_Simplify(ST_Buffer(ST_UnaryUnion(ST_Collect(ST_SnapToGrid(geo::geometry, {$pixel}))), {$radius}, 4), $pixel)) AS geojson FROM geo_point WHERE group_id = {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
         $sql = "SELECT ST_AsGeoJSON(ST_Simplify(ST_UnaryUnion(ST_Collect(ST_Buffer(geom, {$radius}))), $pixel)) AS geojson FROM (SELECT ST_SnapToGrid(geo::geometry, {$pixel}) AS geom FROM geo_point WHERE group_id = {$set_id} AND geo && ST_GeomFromText('{$options['text']}') GROUP BY geom) AS t";
         $res = GeoPoint::getDb()->query($sql);
         $ret = $res->fetch_assoc();
@@ -179,7 +175,6 @@ class WmsController extends Pix_Controller
         $json->type = 'FeatureCollection';
 
         $features = array();
-        //echo $sql . "\n";
         $geojsons = array();
         $points = array();
         while ($row = $res->fetch_assoc()) {
