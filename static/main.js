@@ -21,39 +21,101 @@ main.onload_user_tree = function(){
 
 main.map_is_showed = false;
 
+
 main.show_map = function(){
   var tile_width = 400;
   var tile_height = 400;
 
-  var wmsTypeOptions = {
-    getTileUrl: function(tile, zoom) {
-      var projection = map.getProjection();
-      var zpow = Math.pow(2, zoom);
-      var ul = new google.maps.Point(
+  var getBBoxFromTileZoom = function(tile, zoom){
+    var projection = map.getProjection();
+    var zpow = Math.pow(2, zoom);
+    var ul = new google.maps.Point(
         tile.x * tile_width / zpow, 
         (tile.y + 1) * tile_height / zpow
-      );
-      var lr = new google.maps.Point(
+        );
+    var lr = new google.maps.Point(
         (tile.x + 1) * tile_width / zpow, 
         tile.y * tile_height / zpow
-      );
-      var ulw = projection.fromPointToLatLng(ul);
-      var lrw = projection.fromPointToLatLng(lr);
+        );
+    var ulw = projection.fromPointToLatLng(ul);
+    var lrw = projection.fromPointToLatLng(lr);
 
-      var bbox = ulw.lng() + "," + ulw.lat() + "," + lrw.lng() + "," + lrw.lat();
-
-      var base_url = '';
-      base_url += $('#data-tab-map').attr('data-wms-url');
-      return base_url + '&BBox=' + bbox + '&Width=' + tile_width + '&height=' + tile_height;
-    },
-    tileSize: new google.maps.Size(tile_width, tile_height),
-    maxZoom: 17,
-    minZoom: 0,
-    name: 'WMS',
-    opacity: 0.6
+    return ulw.lng() + "," + ulw.lat() + "," + lrw.lng() + "," + lrw.lat();
   };
 
-  var wmsMapType = new google.maps.ImageMapType(wmsTypeOptions);
+  var polygonJSONToGMapPolygon = function(json){
+    if (json.type != 'Polygon') {
+      throw "Must be Polygon";
+    }
+
+    // TODO: 要處理有洞的 polygon
+    for (var i = 0; i < json.coordinates.length && i < 1; i ++) {
+      var linestrings = json.coordinates[i];
+      var points = [];
+      if (linestrings[0] != linestrings[linestrings.length - 1]) {
+        linestrings.push(linestrings[0]);
+      }
+      if (linestrings.length <= 3) {
+        continue;
+      }
+      for (var j = 0; j < linestrings.length; j ++){
+        var point = linestrings[j];
+        points.push(point);
+      }
+    }
+    return new google.maps.Polygon({
+      paths: points.map(function(p) { return new google.maps.LatLng(p[1], p[0]); }),
+      fillOpacity: 0,
+      strokeWeight: 0
+    });
+  }
+
+  CoordMapType = function(){};
+  CoordMapType.prototype.tileSize = new google.maps.Size(tile_width, tile_height);
+  CoordMapType.prototype.maxZoom = 17;
+  CoordMapType.prototype.getTile = function(coord, zoom, ownerDocument) {
+    var bbox = getBBoxFromTileZoom(coord, zoom);
+    var base_url = '';
+    base_url += $('#data-tab-map').attr('data-wms-url');
+
+    var img = new Image;
+    img.style.width = this.tileSize.width + 'px';
+    img.style.height = this.tileSize.height + 'px';
+    img.src = base_url + '&BBox=' + bbox + '&Width=' + tile_width + '&height=' + tile_height;
+
+    if ($('#data-tab-map').attr('data-clickzone-url')) {
+      var clickzone_url = $('#data-tab-map').attr('data-clickzone-url');
+      clickzone_url += '&BBox=' + bbox + '&Width=' + tile_width + '&height=' + tile_height;
+      $.get(clickzone_url, function(ret){
+        if (null === ret || 'object' != typeof(ret) || 'undefined' === typeof(ret.type)) {
+          return;
+        }
+        var polygons = [];
+        if (ret.type == 'Polygon') {
+          polygons.push(ret.coordinates);
+        } else if (ret.type == 'MultiPolygon') {
+          polygons = ret.coordinates;
+        }
+        gmap_polygons = polygons.map(function(poly){
+          var gmap_polygon = polygonJSONToGMapPolygon({type: 'Polygon', coordinates: poly});
+          gmap_polygon.setMap(map);
+          google.maps.event.addListener(gmap_polygon, 'click', click_event);
+          return gmap_polygon;
+        });
+        img.gmap_polygons = gmap_polygons;
+      }, 'json');
+    }
+    
+    return img;
+  };
+  CoordMapType.prototype.releaseTile = function(node){
+    if ('undefined' !== typeof(node.gmap_polygons)) {
+      node.gmap_polygons.map(function(p){ p.setMap(null); delete(p); });
+    }
+  };
+  CoordMapType.prototype.name = "WMS";
+  var coordinateMapType = new CoordMapType();
+
   var map;
 
   var matches = document.location.hash.match('#([0-9.]*),([0-9.]*),([0-9]*)');
@@ -93,29 +155,30 @@ console.log(b);
     map: map
   });
 
-
-  map.overlayMapTypes.insertAt(0, wmsMapType);
-  google.maps.event.addListener(map, 'click', function(e){
-     $.get($('#data-tab-map').attr('data-click-url') + '&lat=' + e.latLng.lat() + '&lng=' + e.latLng.lng(), function(ret){
-       var span_dom = $('<span></span>');
-       span_dom.empty();
-       if (ret.error) {
-         console.log(ret.message);
-         infowindow.setMap(null);
-         marker.setMap(null);
-       } else {
-         for (var i = 0; i < ret.columns.length; i ++) {
-           li_dom = $('<div></div>');
-           li_dom.text(ret.columns[i] + ':' + ret.values[i]);
-           span_dom.append(li_dom);
-         }
+  var click_event = function(e){
+   $.get($('#data-tab-map').attr('data-click-url') + '&lat=' + e.latLng.lat() + '&lng=' + e.latLng.lng(), function(ret){
+     var span_dom = $('<span></span>');
+     span_dom.empty();
+     if (ret.error) {
+       console.log(ret.message);
+       infowindow.setMap(null);
+       marker.setMap(null);
+     } else {
+       for (var i = 0; i < ret.columns.length; i ++) {
+         li_dom = $('<div></div>');
+         li_dom.text(ret.columns[i] + ':' + ret.values[i]);
+         span_dom.append(li_dom);
        }
-       infowindow.setContent(span_dom.html());
-       infowindow.open(map, marker);
-       marker.setPosition(e.latLng);
-       marker.setMap(map);
-     }, 'json');
-   });
+     }
+     infowindow.setContent(span_dom.html());
+     infowindow.open(map, marker);
+     marker.setPosition(e.latLng);
+     marker.setMap(map);
+   }, 'json');
+  };
+
+  map.overlayMapTypes.insertAt(0, coordinateMapType);
+  //google.maps.event.addListener(map, 'click', click_event);
 
 
    var map_change = function(){
