@@ -185,6 +185,9 @@ class GeoJSON2Image
             }
             foreach ($json->coordinates as $linestrings) {
                 $points = array();
+                if ($linestrings[0] != $linestrings[count($linestrings) - 1]) {
+                    $linestrings[] = $linestrings[0];
+                }
                 if (count($linestrings) <= 3) {
                     // skip 2 points
                     continue 2;
