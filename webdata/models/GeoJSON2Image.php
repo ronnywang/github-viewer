@@ -201,40 +201,11 @@ class GeoJSON2Image
             break;
 
         case 'MultiPolygon':
-            if (array_key_exists('background_color', $draw_options)) {
-                $background_color = imagecolorallocate($gd, $draw_options['background_color'][0], $draw_options['background_color'][1], $draw_options['background_color'][2]);
-            } else {
-                // random color if no background_color
-                $background_color = imagecolorallocate($gd, rand(0, 255), rand(0, 255), rand(0, 255));
-            }
-            if (array_key_exists('border_color', $draw_options)) {
-                $border_color = imagecolorallocate($gd, $draw_options['border_color'][0], $draw_options['border_color'][1], $draw_options['border_color'][2]);
-            } else {
-                $border_color = imagecolorallocate($gd, 0, 0, 0);
-            }
-
-            if (array_key_exists('border_size', $draw_options)) {
-                $border_size = $draw_options['border_size'];
-            } else {
-                $border_size = 3;
-            }
-
-            foreach ($json->coordinates as $polygons) {
-                foreach ($polygons as $linestrings) {
-                    $points = array();
-                    if (count($linestrings) <= 3) {
-                        // skip 2 points
-                        continue 2;
-                    }
-                    foreach ($linestrings as $point) {
-                        $new_point = self::transformPoint($point, $boundry, $max_size);
-                        $points[] = floor($new_point[0]);
-                        $points[] = floor($new_point[1]);
-                    }
-                    imagesetthickness($gd, $border_size);
-                    imagefilledpolygon($gd, $points, count($points) / 2, $background_color);
-                    imagepolygon($gd, $points, count($points) / 2, $border_color);
-                }
+            foreach ($json->coordinates as $polygon) {
+                $j = new StdClass;
+                $j->type = 'Polygon';
+                $j->coordinates = $polygon;
+                self::drawJSON($gd, $j, $boundies, $max_size, $draw_options);
             }
             break;
 
