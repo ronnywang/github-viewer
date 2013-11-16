@@ -205,7 +205,7 @@ class GeoJSON2Image
                 $j = new StdClass;
                 $j->type = 'Polygon';
                 $j->coordinates = $polygon;
-                self::drawJSON($gd, $j, $boundies, $max_size, $draw_options);
+                self::drawJSON($gd, $j, $boundry, $max_size, $draw_options);
             }
             break;
 
