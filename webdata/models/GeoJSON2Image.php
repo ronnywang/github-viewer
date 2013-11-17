@@ -137,7 +137,14 @@ class GeoJSON2Image
         $y_delta = self::pixelY($boundry[3]) - self::pixelY($boundry[2]);
 
         $new_point = array();
-        $new_point[0] = floor((self::pixelX(($point[0] + 180) % 360 + $boundry[4]) - self::pixelX(($boundry[0] + 180) % 360 + $boundry[4])) * $max_size / $x_delta);
+        $p = function($a){
+            $a += 180;
+            if ($a > 360) {
+                $a -= 360;
+            }
+            return $a;
+        };
+        $new_point[0] = floor((self::pixelX($p($point[0]) + $boundry[4]) - self::pixelX($p($boundry[0]) + $boundry[4])) * $max_size / $x_delta);
         $new_point[1] = floor((self::pixelY($boundry[3]) - self::pixelY($point[1])) * $max_size / $y_delta);
         return $new_point;
         $x_delta = $boundry[1] - $boundry[0];
