@@ -105,11 +105,30 @@ class WmsController extends Pix_Controller
 
         $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
         $pixel = $options['pixel'];
-
-        $sql = "SELECT ST_AsGeoJSON(ST_UnaryUnion(ST_Collect(ST_Buffer(ST_Simplify(geo::geometry, {$pixel}), {$pixel} * 2)))) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && {$options['text']}";
-        $res = DataGeometry::getDb()->query($sql);
-        $ret = $res->fetch_assoc();
-        $json = json_decode($ret['geojson']);
+        if ($options['min_lng'] > $options['max_lng']) {
+            $bbox = array();
+            $bbox[] = "ST_GeogFromText('POLYGON(
+                (-180 {$options['min_lat']},-180 {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},-180 {$options['min_lat']})
+            )')";
+            $bbox[] = "ST_GeogFromText('POLYGON(
+                ({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},180 {$options['max_lat']},180 {$options['min_lat']},{$options['min_lng']} {$options['min_lat']})
+            )')";
+            $polygons = array();
+            foreach ($bbox as $b) {
+                $sql = "SELECT ST_AsGeoJSON(ST_Intersection(ST_UnaryUnion(ST_Collect(ST_Buffer(ST_Simplify(geo::geometry, {$pixel}), {$pixel} * 2))), ({$b})::geometry)) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && {$b}";
+                $res = DataGeometry::getDb()->query($sql);
+                $ret = $res->fetch_assoc();
+                $polygons[] = json_decode($ret['geojson']);
+            }
+            $json = new StdClass;
+            $json->type = 'GeometryCollection';
+            $json->geometries = $polygons;
+        } else {
+            $sql = "SELECT ST_AsGeoJSON(ST_Intersection(ST_UnaryUnion(ST_Collect(ST_Buffer(ST_Simplify(geo::geometry, {$pixel}), {$pixel} * 2))), ({$options['text']})::geometry)) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && {$options['text']}";
+            $res = DataGeometry::getdb()->query($sql);
+            $ret = $res->fetch_assoc();
+            $json = json_decode($ret['geojson']);
+        }
 
         return $this->json($json);
     }
