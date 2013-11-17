@@ -103,7 +103,6 @@ class WmsController extends Pix_Controller
             return $this->json(0);
         }
 
-        $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
         $pixel = $options['pixel'];
         if ($options['min_lng'] > $options['max_lng']) {
             $bbox = array();
@@ -143,7 +142,6 @@ class WmsController extends Pix_Controller
             return $this->emptyImage();
         }
 
-        $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
         $pixel = $options['pixel'];
 
         $sql = "SELECT id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$pixel})) AS geojson FROM data_geometry WHERE set_id= {$mapset->set_id} AND geo && {$options['text']}";
@@ -229,10 +227,10 @@ class WmsController extends Pix_Controller
             return $this->emptyImage();
         }
 
-        $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
         $pixel = $options['pixel'];
 
         $sql = "SELECT id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$pixel})) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && {$options['text']}";
+
         $res = DataGeometry::getDb()->query($sql);
 
         $json = new StdClass;
@@ -288,7 +286,6 @@ class WmsController extends Pix_Controller
             echo '404';
             return $this->noview();
         }
-        $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
         $pixel = $options['pixel'];
         $radius = 5 * $pixel;
 
@@ -307,7 +304,6 @@ class WmsController extends Pix_Controller
         }
         $time = array(microtime(true));
 
-        $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
         $pixel = $options['pixel'];
 
         $sql = "SELECT data_id, ST_AsGeoJSON(ST_SnapToGrid(geo::geometry, {$pixel})) AS geojson FROM geo_point WHERE group_id = {$set_id} AND geo && {$options['text']}";
