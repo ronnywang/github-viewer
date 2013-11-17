@@ -34,7 +34,17 @@ class WmsController extends Pix_Controller
         $options['max_lng'] = floatval($max_lng);
         $options['min_lat'] = floatval($min_lat);
         $options['max_lat'] = floatval($max_lat);
-        $options['text'] = "POLYGON(({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},{$options['min_lng']} {$options['min_lat']}))";
+        if ($options['max_lng'] < $options['min_lng']) {
+            $options['text'] = "ST_GeogFromText('MULTIPOLYGON((
+                (-180 {$options['min_lat']},-180 {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},-180 {$options['min_lat']}),
+                ({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},180 {$options['max_lat']},180 {$options['min_lat']},{$options['min_lng']} {$options['min_lat']})
+            ))')";
+            $options['pixel'] = abs((360 + $options['max_lng'] - $options['min_lng']) / $options['width']);
+        } else {
+            $options['text'] = "ST_GeogFromText('POLYGON(({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},{$options['min_lng']} {$options['min_lat']}))')";
+            $options['pixel'] = abs(($options['max_lng'] - $options['min_lng']) / $options['width']);
+        }
+
 
         $layer_data = json_decode($layers);
         if ($layer_data->type == 'csvmap') {
@@ -66,8 +76,18 @@ class WmsController extends Pix_Controller
         $options['max_lng'] = floatval($max_lng);
         $options['min_lat'] = floatval($min_lat);
         $options['max_lat'] = floatval($max_lat);
-        $options['text'] = "POLYGON(({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},{$options['min_lng']} {$options['min_lat']}))";
+        if ($options['max_lng'] < $options['min_lng']) {
+            $options['text'] = "ST_GeogFromText('MULTIPOLYGON((
+                (-180 {$options['min_lat']},-180 {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},-180 {$options['min_lat']}),
+                ({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},180 {$options['max_lat']},180 {$options['min_lat']},{$options['min_lng']} {$options['min_lat']})
+            ))')";
+            $options['pixel'] = abs((360 + $options['max_lng'] - $options['min_lng']) / $options['width']);
+        } else {
+            $options['text'] = "ST_GeogFromText('POLYGON(({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},{$options['min_lng']} {$options['min_lat']}))')";
+            $options['pixel'] = abs(($options['max_lng'] - $options['min_lng']) / $options['width']);
+        }
         $layer_data = json_decode($layers);
+
         if ($layer_data->type == 'csvmap') {
             return $this->drawCSV(intval($layer_data->set_id), $options);
         } elseif ($layer_data->type == 'colormap') {
@@ -84,9 +104,9 @@ class WmsController extends Pix_Controller
         }
 
         $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
-        $pixel = ($boundry[1] - $boundry[0]) / $options['width'];
+        $pixel = $options['pixel'];
 
-        $sql = "SELECT ST_AsGeoJSON(ST_UnaryUnion(ST_Collect(ST_Buffer(ST_Simplify(geo::geometry, {$pixel}), {$pixel} * 2)))) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
+        $sql = "SELECT ST_AsGeoJSON(ST_UnaryUnion(ST_Collect(ST_Buffer(ST_Simplify(geo::geometry, {$pixel}), {$pixel} * 2)))) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && {$options['text']}";
         $res = DataGeometry::getDb()->query($sql);
         $ret = $res->fetch_assoc();
         $json = json_decode($ret['geojson']);
@@ -105,9 +125,9 @@ class WmsController extends Pix_Controller
         }
 
         $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
-        $pixel = ($boundry[1] - $boundry[0]) / $options['width'];
+        $pixel = $options['pixel'];
 
-        $sql = "SELECT id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$pixel})) AS geojson FROM data_geometry WHERE set_id= {$mapset->set_id} AND geo && ST_GeomFromText('{$options['text']}')";
+        $sql = "SELECT id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$pixel})) AS geojson FROM data_geometry WHERE set_id= {$mapset->set_id} AND geo && {$options['text']}";
         $res = DataGeometry::getDb()->query($sql);
 
         $id_map = json_decode($dataset->getEAV('id_map'));
@@ -191,9 +211,9 @@ class WmsController extends Pix_Controller
         }
 
         $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
-        $pixel = ($boundry[1] - $boundry[0]) / $options['width'];
+        $pixel = $options['pixel'];
 
-        $sql = "SELECT id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$pixel})) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
+        $sql = "SELECT id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$pixel})) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && {$options['text']}";
         $res = DataGeometry::getDb()->query($sql);
 
         $json = new StdClass;
@@ -250,10 +270,10 @@ class WmsController extends Pix_Controller
             return $this->noview();
         }
         $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
-        $pixel = ($boundry[1] - $boundry[0]) / $options['width'];
+        $pixel = $options['pixel'];
         $radius = 5 * $pixel;
 
-        $sql = "SELECT ST_AsGeoJSON(ST_Simplify(ST_UnaryUnion(ST_Collect(ST_Buffer(geom, {$radius}))), $pixel)) AS geojson FROM (SELECT ST_SnapToGrid(geo::geometry, {$pixel}) AS geom FROM geo_point WHERE group_id = {$set_id} AND geo && ST_GeomFromText('{$options['text']}') GROUP BY geom) AS t";
+        $sql = "SELECT ST_AsGeoJSON(ST_Simplify(ST_UnaryUnion(ST_Collect(ST_Buffer(geom, {$radius}))), $pixel)) AS geojson FROM (SELECT ST_SnapToGrid(geo::geometry, {$pixel}) AS geom FROM geo_point WHERE group_id = {$set_id} AND geo && {$options['text']} GROUP BY geom) AS t";
         $res = GeoPoint::getDb()->query($sql);
         $ret = $res->fetch_assoc();
         $json = json_decode($ret['geojson']);
@@ -269,9 +289,9 @@ class WmsController extends Pix_Controller
         $time = array(microtime(true));
 
         $boundry = array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']);
-        $pixel = ($boundry[1] - $boundry[0]) / $options['width'];
+        $pixel = $options['pixel'];
 
-        $sql = "SELECT data_id, ST_AsGeoJSON(ST_SnapToGrid(geo::geometry, {$pixel})) AS geojson FROM geo_point WHERE group_id = {$set_id} AND geo && ST_GeomFromText('{$options['text']}')";
+        $sql = "SELECT data_id, ST_AsGeoJSON(ST_SnapToGrid(geo::geometry, {$pixel})) AS geojson FROM geo_point WHERE group_id = {$set_id} AND geo && {$options['text']}";
 
         $res = GeoPoint::getDb()->query($sql);
         $time[1] = microtime(true);
