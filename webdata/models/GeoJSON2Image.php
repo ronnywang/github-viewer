@@ -107,6 +107,17 @@ class GeoJSON2Image
         }
     }
 
+    protected static function pixelX($x)
+    {
+        return ($x + 180) / 360;
+    }
+
+    protected static function pixelY($y)
+    {
+        $sin_y = sin($y * pi() / 180);
+        return (0.5 - log((1 + $sin_y) / (1 - $sin_y)) / (4 * pi()));
+    }
+
     /**
      * Tranfrom geojson coordinates to image coordinates
      * 
@@ -119,9 +130,18 @@ class GeoJSON2Image
      */
     public static function transformPoint($point, $boundry, $max_size)
     {
+        if ($point[0] == 180 or $point[0] == -180) {
+            return false;
+        }
+        $x_delta = self::pixelX($boundry[1]) - self::pixelX($boundry[0]);
+        $y_delta = self::pixelY($boundry[3]) - self::pixelY($boundry[2]);
+
+        $new_point = array();
+        $new_point[0] = floor((self::pixelX(($point[0] + 180) % 360 + $boundry[4]) - self::pixelX(($boundry[0] + 180) % 360 + $boundry[4])) * $max_size / $x_delta);
+        $new_point[1] = floor((self::pixelY($boundry[3]) - self::pixelY($point[1])) * $max_size / $y_delta);
+        return $new_point;
         $x_delta = $boundry[1] - $boundry[0];
         $y_delta = $boundry[3] - $boundry[2];
-        $max_delta = max($x_delta, $y_delta);
 
         return array(
             ($point[0] - $boundry[0]) * $max_size / $x_delta,
@@ -193,9 +213,14 @@ class GeoJSON2Image
                     continue 2;
                 }
                 foreach ($linestrings as $point) {
-                    $new_point = self::transformPoint($point, $boundry, $max_size);
+                    if (!$new_point = self::transformPoint($point, $boundry, $max_size)) {
+                        continue;
+                    }
                     $points[] = floor($new_point[0]);
                     $points[] = floor($new_point[1]);
+                }
+                if (count($points) < 3) {
+                    continue;
                 }
                 imagesetthickness($gd, $border_size);
                 imagefilledpolygon($gd, $points, count($points) / 2, $background_color);
@@ -278,7 +303,17 @@ class GeoJSON2Image
         );
         $bg_color = imagecolorallocate($gd, 0, 0, 0);
         imagecolortransparent($gd, $bg_color);
-        self::drawJSON($gd, $this->json, $boundry, $size);
+        $boundry[4] = 0;
+        if ($boundry[1] > $boundry[0]) {
+            self::drawJSON($gd, $this->json, $boundry, $size);
+        } else {
+            $boundry[1] += 360;
+            self::drawJSON($gd, $this->json, $boundry, $size);
+
+            $boundry[1] -= 360;
+            $boundry[0] -= 360;
+            self::drawJSON($gd, $this->json, $boundry, $size);
+        }
         header('Content-Type: image/png');
         imagepng($gd);
     }
