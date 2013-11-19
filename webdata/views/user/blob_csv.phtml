@@ -3,7 +3,9 @@
 <div id="navGrid"></div>
 </div>
 <script language="javascript">
-var colNames = <?= json_encode(json_Decode($this->set->getEAV('columns'))) ?>;
+<?php if (strlen($this->set->getEAV('columns')) < 1000) { ?>
+    var colNames = <?= json_encode(json_Decode($this->set->getEAV('columns'))) ?>;
+<?php } ?>
 var colModel = [];
 for (var i = 0; i < colNames.length; i ++) {
     colModel.push({name:i, index:i, width:55});
