@@ -60,7 +60,7 @@ class Importer_JSON
                 'repository' => $repository,
                 'path' => $path,
             );
-            Importer_CSV::import($mapfile_github_options);
+            Importer_JSON::import($mapfile_github_options);
             $mapfile_set = DataSet::findByOptions($mapfile_github_options);
             $mapfile_columns = json_decode($mapfile_set->getEAV('columns'));
             $map_columns = is_array($json->map_columns) ? $json->map_columns : array($json->map_columns);
