@@ -126,10 +126,12 @@ class Importer_JSON
             }
             $id_miss[1] = array_map(function($i){ return implode(',', json_decode($i)); }, array_keys($data_ids));
 
-            if (false === ($id = array_search(strval($json->value1->column), $datafile_columns))) {
-                throw new Importer_Exception("data must be lat column name");
+            foreach ($json->tabs as $tab_id => $tab_info) {
+                if (false === ($id = array_search(strval($tab_info->column), $datafile_columns))) {
+                    throw new Importer_Exception("data must be lat column name");
+                }
+                $json->tabs->{$tab_id}->column_id = $id;
             }
-            $json->value1->column_id = $id;
 
             $set = self::getSetAndUpdateSHA($github_options, $content_obj->sha);
             $set->setEAV('data_from', $datafile_set->set_id);

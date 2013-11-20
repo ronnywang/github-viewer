@@ -91,7 +91,7 @@ class WmsController extends Pix_Controller
         if ($layer_data->type == 'csvmap') {
             return $this->drawCSV(intval($layer_data->set_id), $options);
         } elseif ($layer_data->type == 'colormap') {
-            return $this->drawColorMap(intval($layer_data->set_id), $options);
+            return $this->drawColorMap(intval($layer_data->set_id), $options, $layer_data->tab);
         } elseif ($layer_data->type == 'geojson') {
             return $this->drawGeoJSON(intval($layer_data->set_id), $options);
         }
@@ -132,7 +132,7 @@ class WmsController extends Pix_Controller
         return $this->json($json);
     }
 
-    protected function drawColorMap($set_id, $options)
+    protected function drawColorMap($set_id, $options, $tab_id)
     {
         if (!$dataset = DataSet::find($set_id)) {
             return $this->emptyImage();
@@ -141,6 +141,12 @@ class WmsController extends Pix_Controller
         if (!$mapset = DataSet::find($dataset->getEAV('map_from'))) {
             return $this->emptyImage();
         }
+
+        $config = json_decode($dataset->getEAV('config'));
+        if (!property_exists($config->tabs, $tab_id)) {
+            return $this->emptyImage();
+        }
+        $tab_info = $config->tabs->{$tab_id};
 
         $pixel = $options['pixel'];
 
@@ -168,12 +174,12 @@ class WmsController extends Pix_Controller
             return $this->emptyImage();
         }
 
-        $config = json_decode($dataset->getEAV('config'));
-        $min_value1 = floatval($config->value1->min);
-        $max_value1 = floatval($config->value1->max);
-        $color1 = $color2 = $config->value1->color;
+        $min_value1 = floatval($tab_info->min);
+        $max_value1 = floatval($tab_info->max);
+        $color1 = $color2 = $tab_info->color;
 
-        $sql = "SELECT id, data->>{$config->value1->column_id} FROM data_line WHERE id IN (" . implode(",", $data_ids) .")";
+        $column_id = $config->tabs->{$tab_id}->column_id;
+        $sql = "SELECT id, data->>{$column_id} FROM data_line WHERE id IN (" . implode(",", $data_ids) .")";
         $res = DataLine::getDb()->query($sql);
 
         while ($row = $res->fetch_array()){
