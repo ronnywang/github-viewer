@@ -29,6 +29,16 @@ class DataSetRow extends Pix_Table_Row
         )));
     }
 
+    public function getWmsSet()
+    {
+        // 給 ColorMap 專用的
+        $obj = new StdClass;
+        foreach (json_decode($this->getEAV('config'))->tabs as $id => $tab_info) {
+            $obj->{$id} = getenv('CDN_PREFIX') . '/wms?Request=GetMap&Layers=' . urlencode($this->getLayerID($id));
+        }
+        return json_encode($obj);
+    }
+
     public function countMaxMin()
     {
         $max_rows = array();
@@ -44,7 +54,7 @@ class DataSetRow extends Pix_Table_Row
         $this->setEAV('min_values', json_encode($min_rows));
     }
 
-    public function getLayerID()
+    public function getLayerID($opt = null)
     {
         if ($this->getEAV('data_type') == 'geojson') {
             return json_encode(array(
@@ -52,10 +62,14 @@ class DataSetRow extends Pix_Table_Row
                 'set_id' => $this->set_id,
             ));
         } elseif ($this->getEAV('data_type') == 'colormap') {
-            return json_encode(array(
+            $data = array(
                 'type' => 'colormap',
                 'set_id' => $this->set_id,
-            ));
+            );
+            if (!is_null($opt)) {
+                $data['tab'] = $opt;
+            }
+            return json_encode($data);
         } elseif ($this->getEAV('data_type') == 'csvmap') {
             return json_encode(array(
                 'type' => 'csvmap',
