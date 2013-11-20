@@ -82,6 +82,9 @@ main.show_map = function(){
     img.style.width = this.tileSize.width + 'px';
     img.style.height = this.tileSize.height + 'px';
     img.src = base_url + '&BBox=' + bbox + '&Width=' + tile_width + '&height=' + tile_height;
+    if ($('#data-tab-map').attr('data-opacity')) {
+      img.style.opacity = parseFloat($('#data-tab-map').attr('data-opacity'));
+    }
 
     if ($('#data-tab-map').attr('data-clickzone-url')) {
       var clickzone_url = $('#data-tab-map').attr('data-clickzone-url');

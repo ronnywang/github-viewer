@@ -14,4 +14,5 @@ $map_set = DataSet::find($this->set->getEAV('map_from'));
     data-wms-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetMap&Layers=<?= urlencode($this->set->getLayerID()) ?>"
     data-clickzone-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetClickZone&Layers=<?= urlencode($map_set->getLayerID()) ?>"
     data-click-url="/user/getdatafrompoint/?layer=<?= urlencode($this->set->getLayerID()) ?>"
+    data-opacity="0.5"
 ></div>
