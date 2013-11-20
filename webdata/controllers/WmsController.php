@@ -194,7 +194,7 @@ class WmsController extends Pix_Controller
             $feature->type = 'Feature';
             $feature->properties = array(
                 'background_color' => $rgb,
-                'border_color' => array(100, 0, 0),
+                'border_color' => array(0, 0, 0),
                 'border_size' => 1,
             );
             $feature->geometry = json_decode($geojsons[$id]);
@@ -251,8 +251,8 @@ class WmsController extends Pix_Controller
             $feature = new StdClass;
             $feature->type = 'Feature';
             $feature->properties = array(
-                'background_color' => array(0,0,0),
-                'border_color' => array(100, 0, 0),
+                'background_color' => array(255, 0, 0),
+                'border_color' => array(0, 0, 0),
                 'border_size' => 2,
             );
             $feature->geometry = json_decode($geojson);
@@ -336,7 +336,11 @@ class WmsController extends Pix_Controller
         foreach ($geojsons as $id => $geojson) {
             $feature = new StdClass;
             $feature->type = 'Feature';
-            $feature->properties = array('background_color' => array(255,0,0));
+            $feature->properties = array(
+                'background_color' => array(255, 128, 128),
+                'border_color' => array(0, 0, 0),
+                'border_size' => 2,
+            );
             $feature->geometry = json_decode($geojson);
             $features[] = $feature;
         }
