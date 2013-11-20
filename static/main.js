@@ -206,6 +206,8 @@ main.onload_user_blob = function(){
     }
     $('#data-tab-map').height(600);
   });
+
+  $('#btn-tab-map').click();
   $('#btn-import-csv').click(function(e){
     $(this).text($(this).attr('data-wording-importing'));
 
