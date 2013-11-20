@@ -18,16 +18,17 @@ class Importer_CSV
             $file_path = Importer::getFullBodyFilePath($content_obj);
         }
 
+        $fp = fopen($file_path, 'r');
+        $columns = fgetcsv($fp);
+        if (strlen(implode(",", $columns)) > 1024) {
+            throw new Importer_Exception("columns line is too long");
+        }
+
         if (!$set) {
             $set = DataSet::createByOptions($github_options);
         }
         $set->setEAV('sha', $content_obj->sha);
 
-        $fp = fopen($file_path, 'r');
-        $columns = fgetcsv($fp);
-        if (strlen(implode(",", $columns)) > 256) {
-            throw new Importer_Exception("columns line is too long");
-        }
         $set->setEAV('columns', json_encode($columns));
         $num_columns = array_fill_keys(array_keys($columns), 1);
 
