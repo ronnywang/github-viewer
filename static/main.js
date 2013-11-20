@@ -105,6 +105,7 @@ main.show_map = function(){
         img.gmap_polygons = gmap_polygons;
       }, 'json');
     }
+    return $('<div></div>').append(img)[0];
     
     return img;
   };
