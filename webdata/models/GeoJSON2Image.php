@@ -251,6 +251,14 @@ class GeoJSON2Image
                 $background_color = imagecolorallocate($gd, rand(0, 255), rand(0, 255), rand(0, 255));
             }
 
+            if (array_key_exists('border_size', $draw_options)) {
+                $border_size = $draw_options['border_size'];
+            } else {
+                $border_size = 1;
+            }
+
+            $point_size = 10;
+
             if (array_key_exists('border_color', $draw_options)) {
                 $border_color = imagecolorallocate($gd, $draw_options['border_color'][0], $draw_options['border_color'][1], $draw_options['border_color'][2]);
             } else {
@@ -259,8 +267,10 @@ class GeoJSON2Image
 
             $point = $json->coordinates;
             $new_point = self::transformPoint($point, $boundry, $max_size);
-            imagefilledellipse($gd, $new_point[0], $new_point[1], 10, 10, $background_color);
-            imageellipse($gd, $new_point[0], $new_point[1], 10, 10, $border_color);
+            imagefilledellipse($gd, $new_point[0], $new_point[1], $point_size, $point_size, $background_color);
+            for ($i = 0; $i < $border_size; $i ++) {
+                imageellipse($gd, $new_point[0], $new_point[1], $point_size - 1 + $i, $point_size - 1 + $i, $border_color);
+            }
             break;
 
         case 'MultiPoint':
