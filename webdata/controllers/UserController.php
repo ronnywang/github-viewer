@@ -99,7 +99,7 @@ class UserController extends Pix_Controller
         $ret->records = count($data_lines);
         $ret->rows = array();
 
-        $num_cols = json_decode($set->getEAV('num_cols'));
+        $num_cols = json_decode($set->getEAV('numeric_columns'));
         if (1 == $num_cols[$sidx]) {
             $order_string = "(data->>{$sidx})::numeric {$sord}";
         } else {

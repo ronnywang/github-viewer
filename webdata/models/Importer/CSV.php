@@ -25,7 +25,11 @@ class Importer_CSV
 
         $fp = fopen($file_path, 'r');
         $columns = fgetcsv($fp);
+        if (strlen(implode(",", $columns)) > 256) {
+            throw new Importer_Exception("columns line is too long");
+        }
         $set->setEAV('columns', json_encode($columns));
+        $num_columns = array_fill_keys(array_keys($columns), 1);
 
         DataLine::getDb()->query("DELETE FROM data_line WHERE set_id = {$set->set_id}");
 
@@ -34,10 +38,14 @@ class Importer_CSV
         while ($row = fgetcsv($fp)){
             $c ++;
             $insert_rows[] = array($set->set_id, json_encode($row));
+            foreach ($row as $id => $n) {
+                $num_columns[$id] &= is_numeric($n);
+            }
         }
         if ($insert_rows) {
             DataLine::bulkInsert(array('set_id', 'data'), $insert_rows);
         }
+        $set->setEAV('numeric_columns', json_encode($num_columns));
         return $c;
     }
 }
