@@ -318,8 +318,9 @@ class GeoJSON2Image
             $size,
             $size
         );
-        $bg_color = imagecolorallocate($gd, 0, 0, 0);
+        $bg_color = imagecolorallocate($gd, 254, 254, 254);
         imagecolortransparent($gd, $bg_color);
+        imagefill($gd, 0, 0, $bg_color);
         $boundry[4] = 0;
         if ($boundry[1] > $boundry[0]) {
             self::drawJSON($gd, $this->json, $boundry, $size);
