@@ -130,13 +130,17 @@ class UserController extends Pix_Controller
             'path' => $path,
         );
 
-        if (preg_match('#json$#', $path)) {
-            // JSON
-            $count = Importer_JSON::import($github_options);
-        } elseif (preg_match('#\.csv$#', $path)) {
-            $count = Importer_CSV::import($github_options);
-        } else {
-            return $this->json(array('error' => true, 'message' => '不確定檔案格式，無法匯入'));
+        try {
+            if (preg_match('#json$#', $path)) {
+                // JSON
+                $count = Importer_JSON::import($github_options);
+            } elseif (preg_match('#\.csv$#', $path)) {
+                $count = Importer_CSV::import($github_options);
+            } else {
+                return $this->json(array('error' => true, 'message' => '不確定檔案格式，無法匯入'));
+            }
+        } catch (Importer_Exception $e) {
+            return $this->json(array('error' => true, 'message' => $e->getMessage()));
         }
         return $this->json(array('error' => false, 'count' => $count));
     }
