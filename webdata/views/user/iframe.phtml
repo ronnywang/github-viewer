@@ -67,7 +67,7 @@ html, body {
 <div 
     id="data-tab-map"
     class="data-tab"
-    style="width:100%;"
+    data-boundary="<?= $this->escape($this->set->getEAV('boundary')) ?>"
     data-wms-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetMap&Layers=<?= urlencode($this->set->getLayerID()) ?>"
     data-clickzone-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetClickZone&Layers=<?= urlencode($this->set->getLayerID()) ?>"
     data-click-url="/user/getdatafrompoint/?layer=<?= urlencode($this->set->getLayerID()) ?>"
@@ -76,13 +76,24 @@ html, body {
 <div 
     id="data-tab-map"
     class="data-tab"
-    style="width:100%;"
+    data-boundary="<?= $this->escape($this->set->getEAV('boundary')) ?>"
     data-wms-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetMap&Layers=<?= urlencode($this->set->getLayerID()) ?>"
     data-clickzone-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetClickZone&Layers=<?= urlencode($this->set->getLayerID()) ?>"
     data-click-url="/user/getdatafrompoint/?layer=<?= urlencode($this->set->getLayerID()) ?>"
 ></div>
 <?php } elseif ($set and $set->getEAV('data_type') == 'colormap') { ?>
-colormap
+<?php
+$map_set = DataSet::find($this->set->getEAV('map_from'));
+?>
+<div 
+    id="data-tab-map"
+    class="data-tab"
+    data-boundary="<?= $this->escape($map_set->getEAV('boundary')) ?>"
+    data-wms-set="<?= $this->escape($this->set->getWmsSet()) ?>"
+    data-clickzone-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetClickZone&Layers=<?= urlencode($map_set->getLayerID()) ?>"
+    data-click-url="/user/getdatafrompoint/?layer=<?= urlencode($this->set->getLayerID()) ?>"
+    data-opacity="0.5"
+></div>
 <?php } elseif ($set) { ?>
 other
 <?php } else { ?>
