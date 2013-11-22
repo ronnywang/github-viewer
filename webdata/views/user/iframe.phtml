@@ -14,7 +14,7 @@ $this->set = $set = DataSet::findByPath($this->user, $this->repository, $this->p
 <title>1-2月用電量-2012鄉鎮用電量</title>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
-<script src="/static/main.js"></script>
+<script src="/static/main.js?v=<?= getenv('STATIC_VERSION') ?>"></script>
 <script type="text/javascript">
 main.params = <?= json_encode($this->params) ?>;
 <?php if (getenv('GOOGLEANALYTICS_ACCOUNT')) { ?>
