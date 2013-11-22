@@ -151,8 +151,8 @@ main.show_map = function(){
     myLatlng = new google.maps.LatLng(lat, lng);
     map.setCenter(myLatlng);
     map.setZoom(zoom);
-  } else if ($('#btn-tab-map').attr('data-boundary')) {
-    var b = JSON.parse($('#btn-tab-map').attr('data-boundary'));
+  } else if ($('#data-tab-map').attr('data-boundary')) {
+    var b = JSON.parse($('#data-tab-map').attr('data-boundary'));
 console.log(b);
     var southWest = new google.maps.LatLng(parseFloat(b.min_lat), parseFloat(b.min_lng));
     var northEast = new google.maps.LatLng(parseFloat(b.max_lat), parseFloat(b.max_lng));

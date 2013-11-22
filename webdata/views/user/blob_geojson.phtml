@@ -1,9 +1,10 @@
 <button id="btn-tab-list">顯示資料</button>
-<button id="btn-tab-map" data-boundary="<?= $this->escape($this->set->getEAV('boundary')) ?>">顯示地圖</button>
+<button id="btn-tab-map">顯示地圖</button>
 <div 
     id="data-tab-map"
     class="data-tab"
     style="display:none;width:100%;height:400px"
+    data-boundary="<?= $this->escape($this->set->getEAV('boundary')) ?>"
     data-wms-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetMap&Layers=<?= urlencode($this->set->getLayerID()) ?>"
     data-click-url="/user/getdatafrompoint/?layer=<?= urlencode($this->set->getLayerID()) ?>"
     data-clickzone-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetClickZone&Layers=<?= urlencode($this->set->getLayerID()) ?>"
