@@ -21,7 +21,6 @@ main.onload_user_tree = function(){
 
 main.map_is_showed = false;
 
-
 main.show_map = function(){
   var tile_width = 400;
   var tile_height = 400;
@@ -256,6 +255,10 @@ console.log(b);
    google.maps.event.addListener(map, 'center_changed', map_change);
 };
 
+main.onload_user_iframe = function(){
+    main.show_map();
+};
+
 main.onload_user_blob = function(){
   $('#btn-tab-list').click(function(e){
     $('.data-tab').hide();
@@ -324,6 +327,10 @@ main.onload = function(){
 
   if ($('body').is('.user_blob')){
     main.onload_user_blob();
+  }
+
+  if ($('body').is('.user_iframe')){
+    main.onload_user_iframe();
   }
 };
 

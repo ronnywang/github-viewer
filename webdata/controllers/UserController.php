@@ -145,6 +145,15 @@ class UserController extends Pix_Controller
         return $this->json(array('error' => false, 'count' => $count));
     }
 
+    public function iframeAction($params)
+    {
+        $this->view->user = $params['user'];
+        $this->view->repository = $params['repository'];
+        $this->view->branch = $params['branch'];
+        $this->view->path = $params['path'];
+        $this->view->tab = $params['tab'];
+    }
+
     public function blobAction($params)
     {
         $this->view->user = $params['user'];

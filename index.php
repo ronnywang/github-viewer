@@ -40,6 +40,17 @@ Pix_Controller::addDispatcher(function($url){
         ));
     }
 
+    # ronnywang/maps.nlsc.gov.tw/iframe/csv/master/landmark/country/a.csv
+    if ($terms[3] == 'iframe') {
+        return array('user', 'iframe', array(
+            'tab' => $terms[4],
+            'user' => $terms[1],
+            'repository' => $terms[2],
+            'branch' => $terms[5],
+            'path' => urldecode(implode('/', array_slice($terms, 6))),
+        ));
+    }
+
     if ($terms[3] == 'map') {
         return array('user', 'map', array(
             'user' => $terms[1],
