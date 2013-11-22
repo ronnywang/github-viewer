@@ -152,7 +152,6 @@ main.show_map = function(){
     map.setZoom(zoom);
   } else if ($('#data-tab-map').attr('data-boundary')) {
     var b = JSON.parse($('#data-tab-map').attr('data-boundary'));
-console.log(b);
     var southWest = new google.maps.LatLng(parseFloat(b.min_lat), parseFloat(b.min_lng));
     var northEast = new google.maps.LatLng(parseFloat(b.max_lat), parseFloat(b.max_lng));
     var bounds = new google.maps.LatLngBounds(southWest, northEast);

@@ -64,7 +64,14 @@ html, body {
 </head>
 <body class="<?= $this->body_class ?>">
 <?php if ($set and $set->getEAV('data_type') == 'geojson') { ?>
-geojson
+<div 
+    id="data-tab-map"
+    class="data-tab"
+    style="width:100%;"
+    data-wms-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetMap&Layers=<?= urlencode($this->set->getLayerID()) ?>"
+    data-clickzone-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetClickZone&Layers=<?= urlencode($this->set->getLayerID()) ?>"
+    data-click-url="/user/getdatafrompoint/?layer=<?= urlencode($this->set->getLayerID()) ?>"
+></div>
 <?php } elseif ($set and $set->getEAV('data_type') == 'csvmap') { ?>
 <div 
     id="data-tab-map"
