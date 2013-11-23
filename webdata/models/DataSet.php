@@ -39,21 +39,6 @@ class DataSetRow extends Pix_Table_Row
         return json_encode($obj);
     }
 
-    public function countMaxMin()
-    {
-        $max_rows = array();
-        $min_rows = array();
-        foreach (DataLine::search(array('set_id' => $this->set_id)) as $data_line) {
-            $rows = json_decode($data_line->data);
-            foreach ($rows as $id => $row) {
-                $max_rows[$id] = array_key_exists($id, $max_rows) ? max($max_rows[$id], $row) : $row;
-                $min_rows[$id] = array_key_exists($id, $min_rows) ? min($min_rows[$id], $row) : $row;
-            }
-        }
-        $this->setEAV('max_values', json_encode($max_rows));
-        $this->setEAV('min_values', json_encode($min_rows));
-    }
-
     public function getLayerID($opt = null)
     {
         if ($this->getEAV('data_type') == 'geojson') {
