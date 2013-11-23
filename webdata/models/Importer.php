@@ -7,8 +7,9 @@ class Importer
         $user = $github_options['user'];
         $repository = $github_options['repository'];
         $path = $github_options['path'];
+        $branch = $github_options['branch'];
 
-        $url = 'https://api.github.com/repos/' . urlencode($user) . '/' . urlencode($repository) . '/contents/' . urlencode($path);
+        $url = 'https://api.github.com/repos/' . urlencode($user) . '/' . urlencode($repository) . '/contents/' . urlencode($path) . '?ref=' . urlencode($branch);
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_ENCODING, 'gzip,deflate'); 
