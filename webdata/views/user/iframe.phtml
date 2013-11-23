@@ -5,7 +5,7 @@ $this->params = array(
     'repository' => $this->repository,
     'path' => $this->path,
 );
-$this->set = $set = DataSet::findByPath($this->user, $this->repository, $this->path);
+$this->set = $set = DataSet::findByOptions($this->params);
 ?>
 <!DOCTYPE html>
 <html>

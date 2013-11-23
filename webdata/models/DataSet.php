@@ -129,10 +129,4 @@ class DataSet extends Pix_Table
             'path' => $db_path,
         ));
     }
-
-    public function findByPath($user, $repository, $path)
-    {
-        return DataSet::find_by_path('/' . $user . '/' . $repository . '/' . $path);
-
-    }
 }

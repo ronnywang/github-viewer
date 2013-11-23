@@ -5,7 +5,7 @@ $this->params = array(
     'repository' => $this->repository,
     'path' => $this->path,
 );
-$set = DataSet::findByPath($this->user, $this->repository, $this->path);
+$set = DataSet::findByOptions($this->params);
 ?>
 <?= $this->partial('common/header.phtml', $this); ?>
 <?= $this->partial('user/header.phtml', $this) ?>
