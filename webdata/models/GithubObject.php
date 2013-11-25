@@ -130,6 +130,7 @@ class GithubObject
         case 'user':
         case 'path':
         case 'repository':
+        case 'branch':
             return $this->_github_options[$type];
 
         case 'commit':
