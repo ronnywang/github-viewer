@@ -170,7 +170,6 @@ class UserController extends Pix_Controller
             'repository' => $params['repository'],
             'path' => $params['path'],
             'branch' => $params['branch'],
-            'commit' => trim($_GET['commit']),
         ));
 
         // found set and commit same
