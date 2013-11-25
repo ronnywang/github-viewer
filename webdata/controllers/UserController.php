@@ -118,12 +118,22 @@ class UserController extends Pix_Controller
         return $this->json($ret);
     }
 
+    public function importDone($message, $error = true)
+    {
+        if ($_GET['return_to'] == 'iframe') {
+            $path = '/' . urlencode($this->user) . '/' . urlencode($this->repository) . '/iframe/map/' . urlencode($this->branch) . '/' . $this->path . '?commit=' . urlencode($this->commit);
+            return $this->alert($message, $path);
+        } 
+        return $this->json(array('error' => $error, 'message' => $message));
+    }
+
     public function importcsvAction()
     {
-        $user = $_GET['user'];
-        $repository = $_GET['repository'];
-        $path = $_GET['path'];
-        $branch = $_GET['branch'] ?: 'master';
+        $user = $this->user = $_GET['user'];
+        $repository = $this->repository = $_GET['repository'];
+        $path = $this->path = $_GET['path'];
+        $branch = $this->branch = $_GET['branch'] ?: 'master';
+        $commit = $this->commit = $_GET['commit'];
 
         $github_options = array(
             'user' => $user,
@@ -139,12 +149,12 @@ class UserController extends Pix_Controller
             } elseif (preg_match('#\.csv$#', $path)) {
                 $count = Importer_CSV::import($github_options);
             } else {
-                return $this->json(array('error' => true, 'message' => '不確定檔案格式，無法匯入'));
+                return $this->importDone("Unsupported file format", true);
             }
         } catch (Importer_Exception $e) {
-            return $this->json(array('error' => true, 'message' => $e->getMessage()));
+            return $this->importDone($e->getMessage(), true);
         }
-        return $this->json(array('error' => false, 'count' => $count));
+        return $this->importDone("Imported successful", false);
     }
 
     public function iframeAction($params)
