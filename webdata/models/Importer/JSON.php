@@ -30,10 +30,13 @@ class Importer_JSON
                 throw new Importer_Exception("Invalid ColorMap JSON");
             }
 
-            // 檢查 map_file
-            list($user, $repository, $path) = explode("/", $json->map_file, 3);
+            // 檢查 map_repo
+            $user = $json->map_repo->user;
+            $repository = $json->map_repo->repository;
+            $path = $json->map_repo->path;
+            $branch = $json->map_repo->branch ?: 'master';
             if (!preg_match('#json$#', $path)) {
-                throw new Importer_Exception("map_file must be json");
+                throw new Importer_Exception("map_repo->path must be *json");
             }
             $mapfile_github_options = array(
                 'user' => $user,
@@ -53,10 +56,13 @@ class Importer_JSON
                 $map_column_ids[] = $id;
             }
 
-            // 檢查 data_file
-            list($user, $repository, $path) = explode("/", $json->data_file, 3);
+            // 檢查 data_repo
+            $user = $json->data_repo->user;
+            $repository = $json->data_repo->repository;
+            $path = $json->data_repo->path;
+            $branch = $json->data_repo->branch ?: 'master';
             if (!preg_match('#\.csv$#', $path)) {
-                throw new Importer_Exception("data_file must be csv");
+                throw new Importer_Exception("data_repo->file must be *.csv");
             }
             $datafile_github_options = array(
                 'user' => $user,
