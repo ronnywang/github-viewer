@@ -4,19 +4,13 @@ class Importer_CSV
 {
     public function import($github_options)
     {
-        $content_obj = Importer::getContent($github_options);
-        if ($set = DataSet::findByOptions($github_options) and $content_obj->sha == $set->getEAV('sha')) {
+        $github_obj = GithubObject::getObject($github_options);
+        if ($set = $github_obj->getDataSet()) {
             // 沒改變，不需要重新整理
             return 0;
         }
 
-        if ($content_obj->content) {
-            $content = base64_decode($content_obj->content);
-            $file_path = Helper::getTmpFile();
-            file_put_contents($file_path, $content);
-        } else {
-            $file_path = Importer::getFullBodyFilePath($content_obj);
-        }
+        $file_path = $github_obj->file_path;
 
         $fp = fopen($file_path, 'r');
         $columns = fgetcsv($fp);
@@ -24,10 +18,7 @@ class Importer_CSV
             throw new Importer_Exception("columns line is too long");
         }
 
-        if (!$set) {
-            $set = DataSet::createByOptions($github_options);
-        }
-        $set->setEAV('sha', $content_obj->sha);
+        $set = $github_obj->getDataSet(true);
 
         $set->setEAV('columns', json_encode($columns));
         $num_columns = array_fill_keys(array_keys($columns), 1);
@@ -47,6 +38,7 @@ class Importer_CSV
             DataLine::bulkInsert(array('set_id', 'data'), $insert_rows);
         }
         $set->setEAV('numeric_columns', json_encode($num_columns));
+        $github_obj->updateBranch();
         return $c;
     }
 }

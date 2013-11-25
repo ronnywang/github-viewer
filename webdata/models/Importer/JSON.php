@@ -2,37 +2,17 @@
 
 class Importer_JSON
 {
-    public function getSetAndUpdateSHA($github_options, $sha)
-    {
-        try {
-            $set = DataSet::createByOptions($github_options);
-        } catch (Pix_Table_DuplicateException $e) {
-            $set = DataSet::findByOptions($github_options);
-        }
-        DataLine::getDb()->query("DELETE FROM data_line WHERE set_id = {$set->set_id}");
-        DataGeometry::getDb()->query("DELETE FROM data_geometry WHERE set_id={$set->set_id}");
-        $set->lines->delete();
-        $set->setEAV('sha', $sha);
-        return $set;
-    }
-
     public function import($github_options)
     {
-        $content_obj = Importer::getContent($github_options);
-        if ($set = DataSet::findByOptions($github_options) and $content_obj->sha == $set->getEAV('sha')) {
+        $github_obj = GithubObject::getObject($github_options);
+        if ($github_obj->getDataSet()) {
             // 沒改變，不需要重新整理
             if (!$_GET['force']) {
                 return 0;
             }
         }
 
-        if ($content_obj->content) {
-            $content = base64_decode($content_obj->content);
-            $file_path = Helper::getTmpFile();
-            file_put_contents($file_path, $content);
-        } else {
-            $file_path = Importer::getFullBodyFilePath($content_obj);
-        }
+        $file_path = $github_obj->file_path;
 
         $script_file = __DIR__ . '/../../scripts/geojson_parse.js';
         $cmd = "node " . escapeshellarg($script_file) . " get_type " . escapeshellarg($file_path);
@@ -133,13 +113,14 @@ class Importer_JSON
                 $json->tabs->{$tab_id}->column_id = $id;
             }
 
-            $set = self::getSetAndUpdateSHA($github_options, $content_obj->sha);
+            $set = $github_obj->getDataSet(true);
             $set->setEAV('data_from', $datafile_set->set_id);
             $set->setEAV('map_from', $mapfile_set->set_id);
             $set->setEAV('id_miss', json_encode($id_miss));
             $set->setEAV('id_map', json_encode($id_map));
             $set->setEAV('config', json_encode($json));
             $set->setEAV('data_type', 'colormap');
+            $github_obj->updateBranch();
             return count($id_map[0]);
 
         case 'CSVMap':
@@ -166,17 +147,18 @@ class Importer_JSON
                 throw new Importer_Exception("data must be lng column name");
             }
 
-            $set = self::getSetAndUpdateSHA($github_options, $content_obj->sha);
+            $set = $github_obj->getDataSet(true);
             $set->setEAV('data_from', DataSet::findByOptions($data_github_options)->set_id);
             $set->setEAV('data_type', 'csvmap');
 
             GeoPoint::getDb()->query("DELETE FROM geo_point WHERE group_id = {$set->set_id}");
             GeoPoint::getDb()->query("INSERT INTO geo_point (group_id, geo, data_id) SELECT {$set->set_id}, ST_Point((data->>{$lng_id})::numeric, (data->>{$lat_id})::numeric), id FROM data_line WHERE set_id = {$data_set->set_id}");
             $set->countBoundary();
+            $github_obj->updateBranch();
             return 1;
 
         case 'Topology':
-            $set = self::getSetAndUpdateSHA($github_options, $content_obj->sha);
+            $set = $github_obj->getDataSet(true);
 
             $columns[] = '_path';
             // TopoJSON 直接丟，因為應該是不會大到無法處理..
@@ -198,7 +180,7 @@ class Importer_JSON
                 throw new Importer_Exception("geojson_parse split_feature failed");
             }
 
-            $set = self::getSetAndUpdateSHA($github_options, $content_obj->sha);
+            $set = $github_obj->getDataSet(true);
 
             foreach (glob($target_path . '/*.json') as $feature_file) {
                 $feature = json_decode(file_get_contents($feature_file));
@@ -208,7 +190,7 @@ class Importer_JSON
 
         default:
             $json = file_get_contents($file_path);
-            $set = self::getSetAndUpdateSHA($github_options, $content_obj->sha);
+            $set = $github_obj->getDataSet(true);
             $inserted = self::importGeoJSON(json_decode($json), $set, null, $columns);
             break;
         }
@@ -216,6 +198,7 @@ class Importer_JSON
         $set->setEAV('columns', json_encode($columns));
         $set->setEAV('data_type', 'geojson');
         $set->countBoundary();
+        $github_obj->updateBranch();
         return $inserted;
     }
 
