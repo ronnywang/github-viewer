@@ -48,7 +48,8 @@ class GithubObject
             'repository' => $this->repository,
             'path' => $this->path,
             'commit' => $this->commit,
-        ));
+        ))->first();
+
         if ($auto_create and !$data_set) {
             $now = time();
             $data_set = DataSet::insert(array(
@@ -57,7 +58,7 @@ class GithubObject
                 'path' => $this->path,
                 'commit' => $this->commit,
                 'created_at' => $now,
-                'updated_at' => now,
+                'updated_at' => $now,
             ));
         }
         return $data_set;
@@ -108,7 +109,7 @@ class GithubObject
         $path = $github_options['path'];
         $branch = $github_options['branch'];
 
-        $url = 'https://api.github.com/repos/' . urlencode($user) . '/' . urlencode($repository) . '/commits/?sha=' . urlencode($branch) . '&path=' . urlencode($path) . '&per_page=1&page=1';
+        $url = 'https://api.github.com/repos/' . urlencode($user) . '/' . urlencode($repository) . '/commits?sha=' . urlencode($branch) . '&path=' . urlencode($path) . '&per_page=1&page=1';
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_ENCODING, 'gzip,deflate'); 
@@ -133,7 +134,7 @@ class GithubObject
 
         case 'commit':
             $this->getCommitId();
-            return $this->_content_data->{$type};
+            return $this->_commit_data[0]->sha;
 
         case 'file_path':
             $this->getContentData();
