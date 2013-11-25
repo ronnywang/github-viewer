@@ -77,7 +77,10 @@ class DataSet extends Pix_Table
         $this->_rowClass = 'DataSetRow';
 
         $this->_columns['set_id'] = array('type' => 'int', 'auto_increment' => true);
-        $this->_columns['path'] = array('type' => 'varchar', 'size' => 128);
+        $this->_columns['user'] = array('type' => 'varchar', 'size' => 32);
+        $this->_columns['repository'] = array('type' => 'varchar', 'size' => 32);
+        $this->_columns['path'] = array('type' => 'varchar', 'size' => 255);
+        $this->_columns['commit'] = array('type' => 'char', 'size' => 40);
         $this->_columns['created_at'] = array('type' => 'int');
         $this->_columns['updated_at'] = array('type' => 'int');
 
@@ -90,28 +93,55 @@ class DataSet extends Pix_Table
         // data_type: csv
 
         $this->addRowHelper('Pix_Table_Helper_EAV', array('getEAV', 'setEAV'));
-        $this->addIndex('path', array('path'), 'unique');
-    }
-
-    public function getIdByOptions($github_options)
-    {
-        $user = $github_options['user'];
-        $repository = $github_options['repository'];
-        $path = $github_options['path'];
-        // TODO: add branch
-
-        return '/' . $user . '/' . $repository . '/' . $path;
+        $this->addIndex('user_repository_path_commit', array('user', 'repository', 'path', 'commit'), 'unique');
     }
 
     public function findByOptions($github_options)
     {
-        return DataSet::find_by_path(self::getIdByOptions($github_options));
+        // 處理 commit
+        if (!$github_options['commit']) {
+            $branch = $github_options['branch'];
+
+            if ($map = FileBranchMap::find(array($github_options['user'], $github_options['repository'], $github_options['path'], $branch))) {
+                $commit = $map->commit;
+            } else {
+                if (preg_match('#^[0-9a-f]*$#', $branch)) {
+                    $files = DataSet::search(array(
+                        'user' => $github_options['user'],
+                        'repository' => $github_options['repository'],
+                        'path' => $github_options['path'],
+                    ))->search("\"commit\" LIKE '{$branch}%'");
+
+                    if (count($files) == 1) {
+                        return $files->first();
+                    }
+                }
+
+                return null;
+            }
+        } else {
+            $commit = $github_options['commit'];
+        }
+
+        return DataSet::search(array(
+            'user' => $github_options['user'],
+            'repository' => $github_options['repository'],
+            'path' => $github_options['path'],
+            'commit' => $commit,
+        ))->first();
     }
 
     public function createByOptions($github_options)
     {
+        if (!$github_options['commit']) {
+            throw new Exception('no commit');
+        }
+
         return DataSet::insert(array(
-            'path' => self::getIdByOptions($github_options),
+            'user' => $github_options['user'],
+            'repository' => $github_options['repository'],
+            'path' => $github_options['path'],
+            'commit' => $github_options['commit'],
         ));
     }
 }
