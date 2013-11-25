@@ -12,7 +12,7 @@ class FileBranchMap extends Pix_Table
         $this->_columns['path'] = array('type' => 'varchar', 'size' => 255);
         $this->_columns['branch'] = array('type' => 'varchar', 'size' => 16);
         $this->_columns['created_at'] = array('type' => 'int', 'default' => 0);
-        $this->_columns['updated_at'] = array('type' => 'int', 'default' => 0)
+        $this->_columns['updated_at'] = array('type' => 'int', 'default' => 0);
 
         $this->_columns['commit'] = array('type' => 'char', 'size' => 40);
     }
