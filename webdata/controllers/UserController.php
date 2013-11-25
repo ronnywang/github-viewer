@@ -154,6 +154,26 @@ class UserController extends Pix_Controller
         $this->view->branch = $params['branch'];
         $this->view->path = $params['path'];
         $this->view->tab = $params['tab'];
+
+        $this->view->set = DataSet::findByOptions(array(
+            'user' => $params['user'],
+            'repository' => $params['repository'],
+            'path' => $params['path'],
+            'branch' => $params['branch'],
+            'commit' => trim($_GET['commit']),
+        ));
+
+        // found set and commit same
+        if ($this->view->set and trim($_GET['commit']) and 0 === strpos($this->view->set->commit, trim($_GET['commit']))) {
+            header('Cache-Control: max-age=86400');
+        } else {
+            header('Cache-Control: no-cache');
+        }
+
+        if (!$this->view->set) {
+            return $this->redraw('/user/import.phtml');
+        }
+
     }
 
     public function blobAction($params)
