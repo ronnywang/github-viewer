@@ -123,7 +123,7 @@ class UserController extends Pix_Controller
         $user = $_GET['user'];
         $repository = $_GET['repository'];
         $path = $_GET['path'];
-        $branch = $_GET['branch'];
+        $branch = $_GET['branch'] ?: 'master';
 
         $github_options = array(
             'user' => $user,
