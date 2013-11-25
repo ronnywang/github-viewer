@@ -139,7 +139,7 @@ class GithubObject
 
         case 'file_path':
             $this->getContentData();
-            if (!is_null($this->_content_data->size)) {
+            if ($this->_content_data->size === 0 or $this->_content_data->content !== '') {
                 $file = Helper::getTmpFile();
                 file_put_contents($file, base64_decode($this->_content_data->content));
                 return $file;
