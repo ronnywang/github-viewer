@@ -39,6 +39,7 @@ class Importer_JSON
                 'user' => $user,
                 'repository' => $repository,
                 'path' => $path,
+                'branch' => 'master',
             );
             Importer_JSON::import($mapfile_github_options);
             $mapfile_set = DataSet::findByOptions($mapfile_github_options);
@@ -61,6 +62,7 @@ class Importer_JSON
                 'user' => $user,
                 'repository' => $repository,
                 'path' => $path,
+                'branch' => 'master',
             );
             Importer_CSV::import($datafile_github_options);
             $datafile_set = DataSet::findByOptions($datafile_github_options);
@@ -128,14 +130,18 @@ class Importer_JSON
                 throw new Importer_Exception("Invalid CSVMap JSON");
             }
 
-            list($user, $repository, $path) = explode("/", $json->data, 3);
+            $user = $json->repo->user;
+            $repository = $json->repo->repository;
+            $path = $json->repo->path;
+            $branch = $json->repo->branch ?: 'master';
             if (!preg_match('#\.csv$#', $path)) {
-                throw new Importer_Exception("data must be csv");
+                throw new Importer_Exception("path must be csv");
             }
             $data_github_options = array(
                 'user' => $user,
                 'repository' => $repository,
                 'path' => $path,
+                'branch' => $branch,
             );
             Importer_CSV::import($data_github_options);
             $data_set = DataSet::findByOptions($data_github_options);
