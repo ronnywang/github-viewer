@@ -144,8 +144,11 @@ class GithubObject
                 file_put_contents($file, base64_decode($this->_content_data->content));
                 return $file;
             }
-
             return $this->getFullBodyFilePath($this->_content_data->git_url);
+
+        default:
+            throw new Exception("unknown GithubObject type: {$type}");
+
         }
 }
 
