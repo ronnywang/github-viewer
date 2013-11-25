@@ -64,7 +64,7 @@ html, body {
 </style>
 </head>
 <body class="<?= $this->body_class ?>">
-<?php if ($set and $set->getEAV('data_type') == 'geojson') { ?>
+<?php if ($this->set->getEAV('data_type') == 'geojson') { ?>
 <div 
     id="data-tab-map"
     class="data-tab"
@@ -73,7 +73,7 @@ html, body {
     data-clickzone-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetClickZone&Layers=<?= urlencode($this->set->getLayerID()) ?>"
     data-click-url="/user/getdatafrompoint/?layer=<?= urlencode($this->set->getLayerID()) ?>"
 ></div>
-<?php } elseif ($set and $set->getEAV('data_type') == 'csvmap') { ?>
+<?php } elseif ($this->set->getEAV('data_type') == 'csvmap') { ?>
 <div 
     id="data-tab-map"
     class="data-tab"
@@ -82,7 +82,7 @@ html, body {
     data-clickzone-url="<?= getenv('CDN_PREFIX') ?>/wms?Request=GetClickZone&Layers=<?= urlencode($this->set->getLayerID()) ?>"
     data-click-url="/user/getdatafrompoint/?layer=<?= urlencode($this->set->getLayerID()) ?>"
 ></div>
-<?php } elseif ($set and $set->getEAV('data_type') == 'colormap') { ?>
+<?php } elseif ($this->set->getEAV('data_type') == 'colormap') { ?>
 <?php
 $map_set = DataSet::find($this->set->getEAV('map_from'));
 ?>
@@ -95,10 +95,6 @@ $map_set = DataSet::find($this->set->getEAV('map_from'));
     data-click-url="/user/getdatafrompoint/?layer=<?= urlencode($this->set->getLayerID()) ?>"
     data-opacity="0.5"
 ></div>
-<?php } elseif ($set) { ?>
-other
-<?php } else { ?>
-no set
 <?php } ?>
 </body>
 </html>
