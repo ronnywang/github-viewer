@@ -79,6 +79,7 @@ class GithubObject
         $url = 'https://api.github.com/repos/' . urlencode($user) . '/' . urlencode($repository) . '/contents/' . urlencode($path) . '?ref=' . urlencode($branch);
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_USERAGENT, 'GitHub Map+ http://github.ronny.tw');
         curl_setopt($curl, CURLOPT_ENCODING, 'gzip,deflate'); 
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: token ' . getenv('GITHUB_TOKEN')));
         $ret = curl_exec($curl);
@@ -113,6 +114,7 @@ class GithubObject
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_ENCODING, 'gzip,deflate'); 
+        curl_setopt($curl, CURLOPT_USERAGENT, 'GitHub Map+ http://github.ronny.tw');
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: token ' . getenv('GITHUB_TOKEN')));
         $ret = curl_exec($curl);
         curl_close($curl);
@@ -159,6 +161,7 @@ class GithubObject
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_FILE, $download_fp);
         curl_setopt($curl, CURLOPT_ENCODING, 'gzip,deflate'); 
+        curl_setopt($curl, CURLOPT_USERAGENT, 'GitHub Map+ http://github.ronny.tw');
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: token ' . getenv('GITHUB_TOKEN')));
         curl_exec($curl);
         curl_close($curl);
