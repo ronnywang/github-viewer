@@ -115,10 +115,22 @@ class Importer_JSON
             $id_miss[1] = array_map(function($i){ return implode(',', json_decode($i)); }, array_keys($data_ids));
 
             foreach ($json->tabs as $tab_id => $tab_info) {
-                if (false === ($id = array_search(strval($tab_info->column), $datafile_columns))) {
-                    throw new Importer_Exception("data must be lat column name");
+                if (property_exists($tab_info, 'column')) {
+                    if (false === ($id = array_search(strval($tab_info->column), $datafile_columns))) {
+                        throw new Importer_Exception("data must be lat column name");
+                    }
+                    $json->tabs->{$tab_id}->column_id = $id;
+                } else {
+                    if (false === ($id = array_search(strval($tab_info->column1), $datafile_columns))) {
+                        throw new Importer_Exception("data must be lat column1 name");
+                    }
+                    $json->tabs->{$tab_id}->column1_id = $id;
+
+                    if (false === ($id = array_search(strval($tab_info->column2), $datafile_columns))) {
+                        throw new Importer_Exception("data must be lat column2 name");
+                    }
+                    $json->tabs->{$tab_id}->column2_id = $id;
                 }
-                $json->tabs->{$tab_id}->column_id = $id;
             }
 
             $set = $github_obj->getDataSet(true);
