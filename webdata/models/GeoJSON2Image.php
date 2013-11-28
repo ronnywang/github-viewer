@@ -229,9 +229,11 @@ class GeoJSON2Image
                 if (count($points) < 3) {
                     continue;
                 }
-                imagesetthickness($gd, $border_size);
                 imagefilledpolygon($gd, $points, count($points) / 2, $background_color);
-                imagepolygon($gd, $points, count($points) / 2, $border_color);
+                if ($border_size) {
+                    imagesetthickness($gd, $border_size);
+                    imagepolygon($gd, $points, count($points) / 2, $border_color);
+                }
             }
             break;
 
