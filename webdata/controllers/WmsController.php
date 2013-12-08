@@ -48,27 +48,36 @@ class WmsController extends Pix_Controller
         $options['max_lat'] = $max_lat;
 
 
+        $polygons = array();
         if ($max_lng < $min_lng) {
-            $left_mid_lng = (-180 + $max_lng) / 2;
-            $right_mid_lng = (180 + $min_lng) / 2;
-            $options['text'] = "ST_GeogFromText('MULTIPOLYGON(
-                ((-180 {$min_lat},-180 {$max_lat},{$left_mid_lng} {$max_lat},{$left_mid_lng} {$min_lat},-180 {$min_lat})),
-                (({$left_mid_lng} {$min_lat},{$left_mid_lng} {$max_lat},{$max_lng} {$max_lat},{$max_lng} {$min_lat},{$left_mid_lng} {$min_lat})),
-                (({$right_mid_lng} {$min_lat},{$right_mid_lng} {$max_lat},180 {$max_lat},180 {$min_lat},{$right_mid_lng} {$min_lat})),
-                (({$min_lng} {$min_lat},{$min_lng} {$max_lat},{$right_mid_lng} {$max_lat},{$right_mid_lng} {$min_lat},{$min_lng} {$min_lat}))
-            )')";
+            if ($max_lng + 180 > 180) {
+                $left_mid_lng = (-180 + $max_lng) / 2;
+                $polygons[] = "((-180 {$min_lat},-180 {$max_lat},{$left_mid_lng} {$max_lat},{$left_mid_lng} {$min_lat},-180 {$min_lat}))";
+                $polygons[] = "(({$left_mid_lng} {$min_lat},{$left_mid_lng} {$max_lat},{$max_lng} {$max_lat},{$max_lng} {$min_lat},{$left_mid_lng} {$min_lat}))";
+            } else {
+                $polygons[] = "((-180 {$min_lat},-180 {$max_lat},{$max_lng} {$max_lat},{$max_lng} {$min_lat},-180 {$min_lat}))";
+            }
+
+            if ($min_lng < 0) {
+                $right_mid_lng = (180 + $min_lng) / 2;
+                $polygons[] = "(({$right_mid_lng} {$min_lat},{$right_mid_lng} {$max_lat},180 {$max_lat},180 {$min_lat},{$right_mid_lng} {$min_lat}))";
+                $polygons[] = "(({$min_lng} {$min_lat},{$min_lng} {$max_lat},{$right_mid_lng} {$max_lat},{$right_mid_lng} {$min_lat},{$min_lng} {$min_lat}))";
+            } else {
+                $polygons[] = "(({$min_lng} {$min_lat},{$min_lng} {$max_lat},180 {$max_lat},180 {$min_lat},{$min_lng} {$min_lat}))";
+            }
             $options['pixel'] = abs((360 + $max_lng - $min_lng) / $width);
-            //$res = DataGeometry::getDb()->query("SELECT ST_AsGeoJSON({$options['text']})");
-            //echo $res->fetch_array()[0];
-            //exit;
         } else {
-            $mid_lng = ($max_lng + $min_lng) / 2;
-            $options['text'] = "ST_GeogFromText('MULTIPOLYGON("
-                . "(({$min_lng} {$min_lat},{$min_lng} {$max_lat},{$mid_lng} {$max_lat},{$mid_lng} {$min_lat},{$min_lng} {$min_lat})),"
-                . "(({$mid_lng} {$min_lat},{$mid_lng} {$max_lat},{$max_lng} {$max_lat},{$max_lng} {$min_lat},{$mid_lng} {$min_lat}))"
-            .")')";
+            if ($max_lng - $min_lng > 180) {
+                $mid_lng = ($max_lng + $min_lng) / 2;
+                $polygons[] = "(({$min_lng} {$min_lat},{$min_lng} {$max_lat},{$mid_lng} {$max_lat},{$mid_lng} {$min_lat},{$min_lng} {$min_lat}))";
+                $polygons[] = "(({$mid_lng} {$min_lat},{$mid_lng} {$max_lat},{$max_lng} {$max_lat},{$max_lng} {$min_lat},{$mid_lng} {$min_lat}))";
+            } else {
+                $polygons[] = "(({$min_lng} {$min_lat},{$min_lng} {$max_lat},{$max_lng} {$max_lat},{$max_lng} {$min_lat},{$min_lng} {$min_lat}))";
+            }
             $options['pixel'] = abs(($max_lng - $min_lng) / $width);
         }
+        $options['text'] = "ST_GeogFromText('MULTIPOLYGON(" . implode(",", $polygons) . ")')";
+        $options['polygons'] = $polygons;
         return $options;
     }
 
@@ -108,30 +117,19 @@ class WmsController extends Pix_Controller
         }
 
         $pixel = $options['pixel'];
-        if ($options['min_lng'] > $options['max_lng']) {
-            $bbox = array();
-            $bbox[] = "ST_GeogFromText('POLYGON(
-                (-180 {$options['min_lat']},-180 {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},-180 {$options['min_lat']})
-            )')";
-            $bbox[] = "ST_GeogFromText('POLYGON(
-                ({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},180 {$options['max_lat']},180 {$options['min_lat']},{$options['min_lng']} {$options['min_lat']})
-            )')";
-            $polygons = array();
-            foreach ($bbox as $b) {
-                $sql = "SELECT ST_AsGeoJSON(ST_Intersection(ST_UnaryUnion(ST_Collect(ST_Buffer(ST_Simplify(geo::geometry, {$pixel}), {$pixel} * 2))), ({$b})::geometry)) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && {$b}";
-                $res = DataGeometry::getDb()->query($sql);
-                $ret = $res->fetch_assoc();
-                $polygons[] = json_decode($ret['geojson']);
-            }
-            $json = new StdClass;
-            $json->type = 'GeometryCollection';
-            $json->geometries = $polygons;
-        } else {
-            $sql = "SELECT ST_AsGeoJSON(ST_Intersection(ST_UnaryUnion(ST_Collect(ST_Buffer(ST_Simplify(geo::geometry, {$pixel}), {$pixel} * 2))), ({$options['text']})::geometry)) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && {$options['text']}";
-            $res = DataGeometry::getdb()->query($sql);
+        $polygons = array();
+        foreach ($options['polygons'] as $polygon) {
+            $b = "ST_GeogFromText('POLYGON" . $polygon . "')";
+            $sql = "SELECT ST_AsGeoJSON(ST_Intersection(ST_UnaryUnion(ST_Collect(ST_Buffer(ST_Simplify(geo::geometry, {$pixel}), {$pixel} * 2))), ({$b})::geometry)) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && {$b}";
+            $res = DataGeometry::getDb()->query($sql);
             $ret = $res->fetch_assoc();
-            $json = json_decode($ret['geojson']);
+            if ($json = json_decode($ret['geojson'])) {
+                $polygons[] = $json;
+            }
         }
+        $json = new StdClass;
+        $json->type = 'GeometryCollection';
+        $json->geometries = $polygons;
 
         return $this->json($json);
     }
