@@ -29,29 +29,47 @@ class WmsController extends Pix_Controller
         $options['width'] = $this->getParam('width');
         $options['height'] = $this->getParam('height');
 
-        list($min_lng, $min_lat, $max_lng, $max_lat) = explode(',', $bbox);
-        $options['min_lng'] = floatval($min_lng);
-        $options['max_lng'] = floatval($max_lng);
-        $options['min_lat'] = floatval($min_lat);
-        $options['max_lat'] = floatval($max_lat);
-        if ($options['max_lng'] < $options['min_lng']) {
-            $options['text'] = "ST_GeogFromText('MULTIPOLYGON((
-                (-180 {$options['min_lat']},-180 {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},-180 {$options['min_lat']}),
-                ({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},180 {$options['max_lat']},180 {$options['min_lat']},{$options['min_lng']} {$options['min_lat']})
-            ))')";
-            $options['pixel'] = abs((360 + $options['max_lng'] - $options['min_lng']) / $options['width']);
-        } else {
-            $options['text'] = "ST_GeogFromText('POLYGON(({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},{$options['min_lng']} {$options['min_lat']}))')";
-            $options['pixel'] = abs(($options['max_lng'] - $options['min_lng']) / $options['width']);
-        }
-
-
+        $options = array_merge($options, $this->getPixelTextByBBox($bbox, intval($options['width'])));
         $layer_data = json_decode($layers);
         if ($layer_data->type == 'csvmap') {
             return $this->getCSVClickZone(intval($layer_data->set_id), $options);
         } elseif ($layer_data->type == 'geojson') {
             return $this->getGeoJSONClickZone(intval($layer_data->set_id), $options);
         }
+    }
+
+    public function getPixelTextByBBox($bbox, $width)
+    {
+        $options = array();
+        list($min_lng, $min_lat, $max_lng, $max_lat) = array_map('floatval', explode(',', $bbox));
+        $options['min_lng'] = $min_lng;
+        $options['max_lng'] = $max_lng;
+        $options['min_lat'] = $min_lat;
+        $options['max_lat'] = $max_lat;
+
+
+        if ($max_lng < $min_lng) {
+            $left_mid_lng = (-180 + $max_lng) / 2;
+            $right_mid_lng = (180 + $min_lng) / 2;
+            $options['text'] = "ST_GeogFromText('MULTIPOLYGON(
+                ((-180 {$min_lat},-180 {$max_lat},{$left_mid_lng} {$max_lat},{$left_mid_lng} {$min_lat},-180 {$min_lat})),
+                (({$left_mid_lng} {$min_lat},{$left_mid_lng} {$max_lat},{$max_lng} {$max_lat},{$max_lng} {$min_lat},{$left_mid_lng} {$min_lat})),
+                (({$right_mid_lng} {$min_lat},{$right_mid_lng} {$max_lat},180 {$max_lat},180 {$min_lat},{$right_mid_lng} {$min_lat})),
+                (({$min_lng} {$min_lat},{$min_lng} {$max_lat},{$right_mid_lng} {$max_lat},{$right_mid_lng} {$min_lat},{$min_lng} {$min_lat}))
+            )')";
+            $options['pixel'] = abs((360 + $max_lng - $min_lng) / $width);
+            //$res = DataGeometry::getDb()->query("SELECT ST_AsGeoJSON({$options['text']})");
+            //echo $res->fetch_array()[0];
+            //exit;
+        } else {
+            $mid_lng = ($max_lng + $min_lng) / 2;
+            $options['text'] = "ST_GeogFromText('MULTIPOLYGON("
+                . "(({$min_lng} {$min_lat},{$min_lng} {$max_lat},{$mid_lng} {$max_lat},{$mid_lng} {$min_lat},{$min_lng} {$min_lat})),"
+                . "(({$mid_lng} {$min_lat},{$mid_lng} {$max_lat},{$max_lng} {$max_lat},{$max_lng} {$min_lat},{$mid_lng} {$min_lat}))"
+            .")')";
+            $options['pixel'] = abs(($max_lng - $min_lng) / $width);
+        }
+        return $options;
     }
 
     public function getmapAction()
@@ -70,22 +88,8 @@ class WmsController extends Pix_Controller
         $options['width'] = $this->getParam('width');
         $options['height'] = $this->getParam('height');
         $format = $this->getParam('format');
+        $options = array_merge($options, $this->getPixelTextByBBox($bbox, intval($options['width'])));
 
-        list($min_lng, $min_lat, $max_lng, $max_lat) = explode(',', $bbox);
-        $options['min_lng'] = floatval($min_lng);
-        $options['max_lng'] = floatval($max_lng);
-        $options['min_lat'] = floatval($min_lat);
-        $options['max_lat'] = floatval($max_lat);
-        if ($options['max_lng'] < $options['min_lng']) {
-            $options['text'] = "ST_GeogFromText('MULTIPOLYGON((
-                (-180 {$options['min_lat']},-180 {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},-180 {$options['min_lat']}),
-                ({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},180 {$options['max_lat']},180 {$options['min_lat']},{$options['min_lng']} {$options['min_lat']})
-            ))')";
-            $options['pixel'] = abs((360 + $options['max_lng'] - $options['min_lng']) / $options['width']);
-        } else {
-            $options['text'] = "ST_GeogFromText('POLYGON(({$options['min_lng']} {$options['min_lat']},{$options['min_lng']} {$options['max_lat']},{$options['max_lng']} {$options['max_lat']},{$options['max_lng']} {$options['min_lat']},{$options['min_lng']} {$options['min_lat']}))')";
-            $options['pixel'] = abs(($options['max_lng'] - $options['min_lng']) / $options['width']);
-        }
         $layer_data = json_decode($layers);
 
         if ($layer_data->type == 'csvmap') {
