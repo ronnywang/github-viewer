@@ -292,7 +292,7 @@ class WmsController extends Pix_Controller
             $feature = new StdClass;
             $feature->type = 'Feature';
             $feature->properties = array(
-                'background_color' => array(254, 254, 254),
+                'background_color' => false,
                 'border_color' => array(0, 0, 0),
                 'border_size' => 2,
             );
