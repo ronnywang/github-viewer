@@ -101,6 +101,7 @@ main.show_map = function(){
     CoordMapType.prototype.getTile = function(coord, zoom, ownerDocument) {
       var bbox = getBBoxFromTileZoom(coord, zoom);
 
+      var div_dom = $('<div></div>');
       var img = new Image;
       img.style.width = this.tileSize.width + 'px';
       img.style.height = this.tileSize.height + 'px';
@@ -129,14 +130,14 @@ main.show_map = function(){
             google.maps.event.addListener(gmap_polygon, 'click', click_event);
             return gmap_polygon;
           });
-          img.gmap_polygons = gmap_polygons;
+          div_dom.data('gmap_polygons', gmap_polygons);
         }, 'json');
       }
-      return $('<div></div>').width(this.tileSize.width).height(this.tileSize.height).append(img)[0];
+      return div_dom.width(this.tileSize.width).height(this.tileSize.height).append(img)[0];
     };
     CoordMapType.prototype.releaseTile = function(node){
-      if ('undefined' !== typeof(node.gmap_polygons)) {
-        node.gmap_polygons.map(function(p){ p.setMap(null); delete(p); });
+      if ('undefined' !== typeof($(node).data('gmap_polygons'))) {
+        $(node).data('gmap_polygons').map(function(p){ p.setMap(null); delete(p); });
       }
     };
     CoordMapType.prototype.name = 'WMS';
