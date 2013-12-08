@@ -192,11 +192,11 @@ class GeoJSON2Image
             break;
 
         case 'Polygon':
-            if (array_key_exists('background_color', $draw_options)) {
+            if (array_key_exists('background_color', $draw_options) and $draw_options['background_color'] !== false) {
                 $background_color = imagecolorallocate($gd, $draw_options['background_color'][0], $draw_options['background_color'][1], $draw_options['background_color'][2]);
             } else {
-                // random color if no background_color
-                $background_color = imagecolorallocate($gd, rand(0, 255), rand(0, 255), rand(0, 255));
+                // no color if no background_color
+                $background_color = null;
             }
 
             if (array_key_exists('border_color', $draw_options)) {
@@ -239,7 +239,9 @@ class GeoJSON2Image
                 }
             }
 
-            imagefilledpolygon($gd, $filled_points, count($filled_points) / 2, $background_color);
+            if (!is_null($background_color)) {
+                imagefilledpolygon($gd, $filled_points, count($filled_points) / 2, $background_color);
+            }
             break;
 
         case 'MultiPolygon':
@@ -255,7 +257,8 @@ class GeoJSON2Image
             if (array_key_exists('background_color', $draw_options)) {
                 $background_color = imagecolorallocate($gd, $draw_options['background_color'][0], $draw_options['background_color'][1], $draw_options['background_color'][2]);
             } else {
-                $background_color = imagecolorallocate($gd, rand(0, 255), rand(0, 255), rand(0, 255));
+                // default point color is red
+                $background_color = imagecolorallocate($gd, 255, 0, 0);
             }
 
             if (array_key_exists('border_size', $draw_options)) {
@@ -269,6 +272,7 @@ class GeoJSON2Image
             if (array_key_exists('border_color', $draw_options)) {
                 $border_color = imagecolorallocate($gd, $draw_options['border_color'][0], $draw_options['border_color'][1], $draw_options['border_color'][2]);
             } else {
+                // default point border color is black
                 $border_color = imagecolorallocate($gd, 0, 0, 0);
             }
 
