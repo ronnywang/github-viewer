@@ -140,6 +140,7 @@ main.show_map = function(){
 
   var mapOptions = {
     streetViewControl: false,
+    minZoom: 1
   };
 
   map = new google.maps.Map(document.getElementById('data-tab-map'), mapOptions);
