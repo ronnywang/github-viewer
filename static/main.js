@@ -72,6 +72,24 @@ main.show_map = function(){
   var tile_set = [];
   var current_tile = 0;
 
+  var getPolygonsFromJSON = function(json){
+      if (json === null) { return []; }
+
+      if (json.type == 'Polygon') {
+          return [json.coordinates];
+      } else if (json.type == 'MultiPolygon') {
+          return json.coordinates;
+      } else if (json.type == 'GeometryCollection') {
+          var polygons = [];
+          for (var i = 0; i < json.geometries.length; i ++) {
+              polygons = polygons.concat(getPolygonsFromJSON(json.geometries[i]));
+          }
+          return polygons;
+      } else {
+          throw "Unknown type: " + json.type;
+      }
+  };
+
   var addTile = function(wms_set){
     for (var tab_id in wms_set) {
       addCustomControl(tab_id, tile_set.length);
@@ -104,12 +122,7 @@ main.show_map = function(){
           if (null === ret || 'object' != typeof(ret) || 'undefined' === typeof(ret.type)) {
             return;
           }
-          var polygons = [];
-          if (ret.type == 'Polygon') {
-            polygons.push(ret.coordinates);
-          } else if (ret.type == 'MultiPolygon') {
-            polygons = ret.coordinates;
-          }
+          var polygons = getPolygonsFromJSON(ret);
           gmap_polygons = polygons.map(function(poly){
             var gmap_polygon = polygonJSONToGMapPolygon({type: 'Polygon', coordinates: poly});
             gmap_polygon.setMap(map);
