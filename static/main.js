@@ -47,10 +47,10 @@ main.show_map = function(){
       throw "Must be Polygon";
     }
 
-    // TODO: 要處理有洞的 polygon
-    for (var i = 0; i < json.coordinates.length && i < 1; i ++) {
+    var paths = [];
+    for (var i = 0; i < json.coordinates.length; i++) {
       var linestrings = json.coordinates[i];
-      var points = [];
+      var path = [];
       if (linestrings[0] != linestrings[linestrings.length - 1]) {
         linestrings.push(linestrings[0]);
       }
@@ -59,11 +59,12 @@ main.show_map = function(){
       }
       for (var j = 0; j < linestrings.length; j ++){
         var point = linestrings[j];
-        points.push(point);
+        path.push(new google.maps.LatLng(point[1], point[0]));
       }
+      paths.push(path);
     }
     return new google.maps.Polygon({
-      paths: points.map(function(p) { return new google.maps.LatLng(p[1], p[0]); }),
+      paths: paths,
       fillOpacity: 0,
       strokeWeight: 0
     });
