@@ -5,7 +5,7 @@ class Importer_JSON
     public function import($github_options)
     {
         $github_obj = GithubObject::getObject($github_options);
-        if ($github_obj->getDataSet()) {
+        if ($set = $github_obj->getDataSet() and in_array($set->getEAV('data_type'), array('geojson'))) {
             // 沒改變，不需要重新整理
             if (!$_GET['force']) {
                 return 0;
