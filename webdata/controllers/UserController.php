@@ -17,7 +17,7 @@ class UserController extends Pix_Controller
             if (!$set = DataSet::find(intval($layer->set_id))) {
                 return $this->redirect('/');
             }
-            $sql = "SELECT id FROM data_geometry WHERE set_id = {$set->set_id} AND geo && ST_PointFromText('POINT({$lng} {$lat})', 4326)";
+            $sql = "SELECT id, ST_AsGeoJSON(merge_geo) AS json FROM (SELECT id, ST_UnaryUnion(geo::geometry) as merge_geo FROM data_geometry WHERE set_id = {$set->set_id} AND geo && ST_PointFromText('POINT({$lng} {$lat})', 4326) GROUP BY id) AS merged_polygon WHERE ST_Contains(merge_geo, ST_GeomFromText('POINT({$lng} {$lat})', 4326))";
             $res = DataGeometry::getDb()->query($sql);
             if (!$row = $res->fetch_assoc()) {
                 return $this->json(array('error' => true, 'message' => 'not found'));
@@ -38,7 +38,7 @@ class UserController extends Pix_Controller
             if (!$dataset = DataSet::find($set->getEAV('data_from'))){
                 return $this->redirect('/');
             }
-            $sql = "SELECT id FROM data_geometry WHERE set_id = {$mapset->set_id} AND geo && ST_PointFromText('POINT({$lng} {$lat})', 4326)";
+            $sql = "SELECT id, ST_AsGeoJSON(merge_geo) AS json FROM (SELECT id, ST_UnaryUnion(geo::geometry) as merge_geo FROM data_geometry WHERE set_id = {$mapset->set_id} AND geo && ST_PointFromText('POINT({$lng} {$lat})', 4326) GROUP BY id) AS merged_polygon WHERE ST_Contains(merge_geo, ST_GeomFromText('POINT({$lng} {$lat})', 4326))";
             $res = DataGeometry::getDb()->query($sql);
             if (!$row = $res->fetch_assoc()) {
                 return $this->json(array('error' => true, 'message' => 'not found'));
