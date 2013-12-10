@@ -35,7 +35,7 @@ Pix_Controller::addDispatcher(function($url){
     }
 
     # ronnywang/maps.nlsc.gov.tw/blob/master/landmark/country/a.csv
-    if (in_array($terms[3], array('blob', 'map', 'tree'))) {
+    if (in_array($terms[3], array('blob', 'map', 'tree', 'meter'))) {
         return array('user', $terms[3], array(
             'user' => $terms[1],
             'repository' => $terms[2],
