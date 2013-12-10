@@ -136,39 +136,21 @@ class WmsController extends Pix_Controller
 
     protected function getColor($row, $tab_info)
     {
-        if (property_exists($tab_info, 'column_id')) {
-            $min_value1 = floatval($tab_info->min);
-            $max_value1 = floatval($tab_info->max);
-            $color1 = $color2 = $tab_info->color;
-
-            if (floatval($row[0]) < 0) {
-                $rate  = 1.0 * floatval($row[0] - $min_value1) / ($max_value1 - $min_value1);
-                $color = $color2;
-            } else {
-                $rate  = 1.0 * floatval($row[0] - $min_value1) / ($max_value1 - $min_value1);
-                $color = $color1;
-            }
-            $rgb = array();
+        $max_rate = 1;
+        $min_rate = 0;
+        $color1 = $tab_info->color1;
+        $color2 = $tab_info->color2;
+        $rate = 1.0 * floatval($row[0]) / (floatval($row[0]) + floatval($row[1]));
+        $rgb = array();
+        if ($rate > 0.5) {
+            $rate = ($rate - 0.5) / ($max_rate - 0.5);
             for ($i = 0; $i < 3; $i ++) {
-                $rgb[$i] = floor(255 - (255 - intval($color[$i])) * $rate);
+                $rgb[$i] = floor($color1[$i] - ($color1[$i] - 255) * (1 - $rate));
             }
         } else {
-            $max_rate = 1;
-            $min_rate = 0;
-            $color1 = $tab_info->color1;
-            $color2 = $tab_info->color2;
-            $rate = 1.0 * floatval($row[0]) / (floatval($row[0]) + floatval($row[1]));
-            $rgb = array();
-            if ($rate > 0.5) {
-                $rate = ($rate - 0.5) / ($max_rate - 0.5);
-                for ($i = 0; $i < 3; $i ++) {
-                    $rgb[$i] = floor($color1[$i] - ($color1[$i] - 255) * (1 - $rate));
-                }
-            } else {
-                $rate = (0.5 - $rate) / (0.5 - $min_rate);
-                for ($i = 0; $i < 3; $i ++) {
-                    $rgb[$i] = floor($color2[$i] - ($color2[$i] - 255) * (1 - $rate));
-                }
+            $rate = (0.5 - $rate) / (0.5 - $min_rate);
+            for ($i = 0; $i < 3; $i ++) {
+                $rgb[$i] = floor($color2[$i] - ($color2[$i] - 255) * (1 - $rate));
             }
         }
 
@@ -230,7 +212,11 @@ class WmsController extends Pix_Controller
         while ($row = $res->fetch_array()){
             $id = array_shift($row);
 
-            $rgb = $this->getColor($row, $tab_info);
+            if (property_exists($tab_info, 'column_id')) {
+                $rgb = ColorLib::getColor($row[0], ColorLib::getColorConfig($config, $tab_id));
+            } else {
+                $rgb = $this->getColor($row, $tab_info);
+            }
 
             $feature = new StdClass;
             $feature->type = 'Feature';
