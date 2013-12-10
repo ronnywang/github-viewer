@@ -7,14 +7,12 @@ class UserController extends Pix_Controller
         $this->view->user = $params['user'];
     }
 
-    public function meterAction($params)
+    public function meterAction()
     {
-        $set = DataSet::findByOptions(array(
-            'user' => $params['user'],
-            'repository' => $params['repository'],
-            'path' => $params['path'],
-            'branch' => $params['branch'],
-        ));
+        $layers = $_GET['Layers'];
+        $layer_data = json_decode($layers);
+
+        $set = DataSet::find($layer_data->set_id);
         if (!$set) {
             return $this->noview();
         }
@@ -22,7 +20,7 @@ class UserController extends Pix_Controller
             return $this->noview();
         }
 
-        $tab_id = $_GET['tab'];
+        $tab_id = $layer_data->tab;
         if (!property_exists($config->tabs, $tab_id)) {
             return $this->noview();
         }
