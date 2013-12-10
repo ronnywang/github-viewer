@@ -32,11 +32,15 @@ class DataSetRow extends Pix_Table_Row
     public function getWmsSet()
     {
         // 給 ColorMap 專用的
-        $obj = new StdClass;
+        $objs = array();
         foreach (json_decode($this->getEAV('config'))->tabs as $id => $tab_info) {
-            $obj->{$id} = getenv('CDN_PREFIX') . '/wms?Request=GetMap&Layers=' . urlencode($this->getLayerID($id));
+            $objs[] = array(
+                $id,
+                getenv('CDN_PREFIX') . '/wms?Request=GetMap&Layers=' . urlencode($this->getLayerID($id)),
+                getenv('CDN_PREFIX') . '/user/meter?Layers=' . urlencode($this->getLayerID($id)),
+            );
         }
-        return json_encode($obj);
+        return json_encode($objs);
     }
 
     public function getLayerID($opt = null)
