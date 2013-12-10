@@ -7,6 +7,58 @@ class UserController extends Pix_Controller
         $this->view->user = $params['user'];
     }
 
+    public function meterAction($params)
+    {
+        $set = DataSet::findByOptions(array(
+            'user' => $params['user'],
+            'repository' => $params['repository'],
+            'path' => $params['path'],
+            'branch' => $params['branch'],
+        ));
+        if (!$set) {
+            return $this->noview();
+        }
+        if (!$config = json_decode($set->getEAV('config'))) {
+            return $this->noview();
+        }
+
+        $tab_id = $_GET['tab'];
+        if (!property_exists($config->tabs, $tab_id)) {
+            return $this->noview();
+        }
+
+        $colors = ColorLib::getColorConfig($config, $tab_id);
+        if (is_null($colors)) {
+            return $this->noview();
+        }
+
+        $height = 300;
+        $padding = 5;
+        $level = 20;
+
+        $min_val = min(array_map(function($a){ return $a[0]; }, $colors));
+        $max_val = max(array_map(function($a){ return $a[0]; }, $colors));
+
+        $gd = imagecreatetruecolor(100, $height);
+        $bg_color = imagecolorallocate($gd, 254, 254, 254);
+        $black = imagecolorallocate($gd, 0, 0, 0);
+        imagecolortransparent($gd, $bg_color);
+        imagefill($gd, 0, 0, $bg_color);
+
+        for ($i = 0; $i < $level; $i ++) {
+            $v = floor($min_val + $i * ($max_val - $min_val) / ($level - 1));
+            $rgb = ColorLib::getColor($v, $colors);
+            $color = imagecolorallocate($gd, $rgb[0], $rgb[1], $rgb[2]);
+            imagefilledrectangle($gd, 0, floor($padding + ($level - $i) * ($height - 2 * $padding) / $level), 40, floor($padding + ($level - $i - 1) * ($height - 2 * $padding) / $level), $color);
+            imagestring($gd, 0, 45, floor($padding + ($level - $i - 0.5) * ($height - 2 * $padding) / $level), strval($v), $black);
+        }
+
+        header('Content-Type: image/png');
+        imagepng($gd);
+
+        return $this->noview();
+    }
+
     public function getdatafrompointAction()
     {
         $layer = json_decode($_GET['layer']);
