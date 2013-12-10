@@ -91,8 +91,11 @@ main.show_map = function(){
       }
   };
 
+  var meter_set = {};
+
   var addTile = function(wms_set){
-    for (var tab_id in wms_set) {
+    for (var i = 0; i < wms_set.length; i ++) {
+      var tab_id = wms_set[i][0];
       addCustomControl(tab_id, tile_set.length);
       tile_set.push(tab_id);
     }
@@ -108,8 +111,14 @@ main.show_map = function(){
       img.style.height = this.tileSize.height + 'px';
       img.className = 'wms-tile-img';
       img.src_set = {};
-      for (var tab_id in wms_set) {
-        img.src_set[tab_id] = wms_set[tab_id] + '&BBox=' + bbox + '&Width=' + tile_width + '&height=' + tile_height;
+      for (var i = 0; i < wms_set.length; i ++) {
+        img.src_set[wms_set[i][0]] = wms_set[i][1] + '&BBox=' + bbox + '&Width=' + tile_width + '&height=' + tile_height;
+        if (wms_set[i].length > 2) {
+          meter_set[i] = wms_set[i][2];
+          if (i == 0) {
+            meterDiv.src = wms_set[i][2];
+          }
+        }
       }
       img.src = img.src_set[tile_set[current_tile]];
 
@@ -179,10 +188,16 @@ main.show_map = function(){
   }
 
   var controlDiv = document.createElement('div');
+  var meterDiv = document.createElement('img');
+
   var controlUI_set = [];
 
   controlDiv.style.padding = '5px';
+  meterDiv.style.width = '100px';
+  meterDiv.style.height = '300px';
+
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(controlDiv);
+  map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(meterDiv);
 
   var addCustomControl = function(name, id){
     // Set CSS for the control border.
@@ -216,6 +231,9 @@ main.show_map = function(){
       $('.custom-control-ui').css('background-color', 'white');
       $(controlUI_set[this.data_id]).css('background-color', 'yellow');
       current_tile = this.data_id;
+      if (meter_url = meter_set[this.data_id]) {
+        meterDiv.src = meter_url;
+      }
       $('.wms-tile-img').each(function(){
         img = this;
         img.src = img.src_set[tile_set[current_tile]];
@@ -224,7 +242,7 @@ main.show_map = function(){
   };
 
   if ($('#data-tab-map').attr('data-wms-url')) {
-    addTile({WMS: $('#data-tab-map').attr('data-wms-url')});
+    addTile(['WMS',  $('#data-tab-map').attr('data-wms-url')]);
   } else if ($('#data-tab-map').attr('data-wms-set')) {
     var wms_set = JSON.parse($('#data-tab-map').attr('data-wms-set'));
     addTile(wms_set);
