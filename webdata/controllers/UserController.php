@@ -50,7 +50,10 @@ class UserController extends Pix_Controller
             $rgb = ColorLib::getColor($v, $colors);
             $color = imagecolorallocate($gd, $rgb[0], $rgb[1], $rgb[2]);
             imagefilledrectangle($gd, 0, floor($padding + ($level - $i) * ($height - 2 * $padding) / $level), 40, floor($padding + ($level - $i - 1) * ($height - 2 * $padding) / $level), $color);
-            imagestring($gd, 0, 45, floor($padding + ($level - $i - 0.5) * ($height - 2 * $padding) / $level), strval($v), $black);
+        }
+        foreach ($colors as $v_rgb) {
+            list($v, $rgb) = $v_rgb;
+            imagestring($gd, 0, 45, ($height - $padding) - ($v - $min_val) / ($max_val - $min_val) * ($height - 2 * $padding), $v, $black);
         }
 
         header('Content-Type: image/png');
