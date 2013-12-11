@@ -242,7 +242,7 @@ main.show_map = function(){
   };
 
   if ($('#data-tab-map').attr('data-wms-url')) {
-    addTile(['WMS',  $('#data-tab-map').attr('data-wms-url')]);
+    addTile([['WMS', $('#data-tab-map').attr('data-wms-url')]]);
   } else if ($('#data-tab-map').attr('data-wms-set')) {
     var wms_set = JSON.parse($('#data-tab-map').attr('data-wms-set'));
     addTile(wms_set);
