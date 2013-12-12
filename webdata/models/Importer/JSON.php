@@ -51,7 +51,7 @@ class Importer_JSON
             $map_column_ids = array();
             foreach ($map_columns as $map_column) {
                 if (false === ($id = array_search(strval($map_column), $mapfile_columns))) {
-                    throw new Importer_Exception("data must be lat column name");
+                    throw new Importer_Exception("map has no column: " . $map_column);
                 }
                 $map_column_ids[] = $id;
             }
@@ -77,7 +77,7 @@ class Importer_JSON
             $data_column_ids = array();
             foreach ($data_columns as $data_column) {
                 if (false === ($id = array_search(strval($data_column), $datafile_columns))) {
-                    throw new Importer_Exception("data must be lat column name");
+                    throw new Importer_Exception("data has no column: " . $data_column);
                 }
                 $data_column_ids[] = $id;
             }
@@ -117,17 +117,17 @@ class Importer_JSON
             foreach ($json->tabs as $tab_id => $tab_info) {
                 if (property_exists($tab_info, 'column')) {
                     if (false === ($id = array_search(strval($tab_info->column), $datafile_columns))) {
-                        throw new Importer_Exception("data must be lat column name");
+                        throw new Importer_Exception("data has no column: " . $tab_info->column);
                     }
                     $json->tabs->{$tab_id}->column_id = $id;
                 } else {
                     if (false === ($id = array_search(strval($tab_info->column1), $datafile_columns))) {
-                        throw new Importer_Exception("data must be lat column1 name");
+                        throw new Importer_Exception("data has no column: " . $tab_info->column1);
                     }
                     $json->tabs->{$tab_id}->column1_id = $id;
 
                     if (false === ($id = array_search(strval($tab_info->column2), $datafile_columns))) {
-                        throw new Importer_Exception("data must be lat column2 name");
+                        throw new Importer_Exception("data has no column: " . $tab_info->column2);
                     }
                     $json->tabs->{$tab_id}->column2_id = $id;
                 }
@@ -165,10 +165,10 @@ class Importer_JSON
             $data_set = DataSet::findByOptions($data_github_options);
             $data_columns = json_decode($data_set->getEAV('columns'));
             if (false === ($lat_id = array_search(strval($json->latlng[0]), $data_columns))) {
-                throw new Importer_Exception("data must be lat column name");
+                throw new Importer_Exception("data has no column: " . $json->latlng[0]);
             }
             if (false === ($lng_id = array_search(strval($json->latlng[1]), $data_columns))) {
-                throw new Importer_Exception("data must be lng column name");
+                throw new Importer_Exception("data has no column: " . $json->latlng[1]);
             }
 
             $set = $github_obj->getDataSet(true);
