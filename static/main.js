@@ -181,6 +181,7 @@ main.show_map = function(){
     var northEast = new google.maps.LatLng(parseFloat(b.max_lat), parseFloat(b.max_lng));
     var bounds = new google.maps.LatLngBounds(southWest, northEast);
     map.fitBounds(bounds);
+    map.panToBounds(bounds);
   } else {
     myLatlng = new google.maps.LatLng(lat, lng);
     map.setCenter(myLatlng);
