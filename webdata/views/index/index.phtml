@@ -1,2 +1,14 @@
 <?= $this->partial('/common/header.phtml', $this) ?>
+<form id="form">
+    GitHub URL: <input type="text" placeholder="GeoJSON, TopoJSON or CSV URL" id="form-text" class="input-xlarge">
+    <button type="submit">Go</button>
+</form>
+<script>
+$('#form').submit(function(e){
+    e.preventDefault();
+    var url = $('#form-text').val();
+    var matches = url.match('//github\.com/(.*)');
+    document.location = '/' + matches[1];
+});
+</script>
 <?= $this->partial('/common/footer.phtml', $this) ?>
