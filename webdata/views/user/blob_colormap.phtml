@@ -4,8 +4,8 @@ $data_set = DataSet::find($this->set->getEAV('data_from'));
 $map_set = DataSet::find($this->set->getEAV('map_from'));
 
 ?>
-<button id="btn-tab-list">顯示資料</button>
-<button id="btn-tab-map">顯示地圖</button>
+<button id="btn-tab-list">Show Data</button>
+<button id="btn-tab-map">Show Map</button>
 <?= $this->partial('/user/blob_csv.phtml', array('set' => $data_set)) ?>
 <div 
     id="data-tab-map"
