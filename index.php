@@ -14,6 +14,9 @@ Pix_Controller::addDispatcher(function($url){
     list($uri, $params) = explode('&', $url, 2);
     $terms = explode('/', $uri);
 
+    if (!$terms[1]) {
+        return;
+    }
     if (in_array($terms[1], array('user', 'wms'))) {
         return;
     }
