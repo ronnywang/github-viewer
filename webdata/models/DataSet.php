@@ -51,12 +51,15 @@ class DataSetRow extends Pix_Table_Row
                 'set_id' => $this->set_id,
             ));
         } elseif ($this->getEAV('data_type') == 'colormap') {
+            $config = json_decode($this->getEAV('config'));
+
             $data = array(
                 'type' => 'colormap',
                 'set_id' => $this->set_id,
             );
             if (!is_null($opt)) {
-                $data['tab'] = $opt;
+                $data['color_config'] = ColorLib::getColorConfig($config, $opt);
+                $data['column_id'] = $config->tabs->{$opt}->column_id;
             }
             return json_encode($data);
         } elseif ($this->getEAV('data_type') == 'csvmap') {

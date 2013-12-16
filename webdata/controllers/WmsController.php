@@ -104,7 +104,7 @@ class WmsController extends Pix_Controller
         if ($layer_data->type == 'csvmap') {
             return $this->drawCSV(intval($layer_data->set_id), $options);
         } elseif ($layer_data->type == 'colormap') {
-            return $this->drawColorMap(intval($layer_data->set_id), $options, $layer_data->tab);
+            return $this->drawColorMap(intval($layer_data->set_id), $options, $layer_data);
         } elseif ($layer_data->type == 'geojson') {
             return $this->drawGeoJSON(intval($layer_data->set_id), $options);
         }
@@ -134,7 +134,7 @@ class WmsController extends Pix_Controller
         return $this->json($json);
     }
 
-    protected function drawColorMap($set_id, $options, $tab_id)
+    protected function drawColorMap($set_id, $options, $layer_data)
     {
         if (!$dataset = DataSet::find($set_id)) {
             return $this->emptyImage();
@@ -143,12 +143,6 @@ class WmsController extends Pix_Controller
         if (!$mapset = DataSet::find($dataset->getEAV('map_from'))) {
             return $this->emptyImage();
         }
-
-        $config = json_decode($dataset->getEAV('config'));
-        if (!property_exists($config->tabs, $tab_id)) {
-            return $this->emptyImage();
-        }
-        $tab_info = $config->tabs->{$tab_id};
 
         $pixel = $options['pixel'];
 
@@ -176,18 +170,16 @@ class WmsController extends Pix_Controller
             return $this->emptyImage();
         }
 
-        if (property_exists($config->tabs->{$tab_id}, 'column_id')) {
-            $column_id = $config->tabs->{$tab_id}->column_id;
-            $sql = "SELECT id, data->>{$column_id} FROM data_line WHERE id IN (" . implode(",", $data_ids) .")";
-        } else {
-            return $this->emptyImage();
-        }
+        $column_id = $layer_data->column_id;
+        $sql = "SELECT id, data->>{$column_id} FROM data_line WHERE id IN (" . implode(",", $data_ids) .")";
+
         $res = DataLine::getDb()->query($sql);
 
         while ($row = $res->fetch_array()){
             $id = array_shift($row);
 
-            $rgb = ColorLib::getColor($row[0], ColorLib::getColorConfig($config, $tab_id));
+            $color_config = $layer_data->color_config;
+            $rgb = ColorLib::getColor($row[0], $color_config);
 
             $feature = new StdClass;
             $feature->type = 'Feature';
