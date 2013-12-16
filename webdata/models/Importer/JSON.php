@@ -121,15 +121,7 @@ class Importer_JSON
                     }
                     $json->tabs->{$tab_id}->column_id = $id;
                 } else {
-                    if (false === ($id = array_search(strval($tab_info->column1), $datafile_columns))) {
-                        throw new Importer_Exception("data has no column: " . $tab_info->column1);
-                    }
-                    $json->tabs->{$tab_id}->column1_id = $id;
-
-                    if (false === ($id = array_search(strval($tab_info->column2), $datafile_columns))) {
-                        throw new Importer_Exception("data has no column: " . $tab_info->column2);
-                    }
-                    $json->tabs->{$tab_id}->column2_id = $id;
+                    throw new Importer_Exception("no column");
                 }
             }
 

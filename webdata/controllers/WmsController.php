@@ -134,29 +134,6 @@ class WmsController extends Pix_Controller
         return $this->json($json);
     }
 
-    protected function getColor($row, $tab_info)
-    {
-        $max_rate = 1;
-        $min_rate = 0;
-        $color1 = $tab_info->color1;
-        $color2 = $tab_info->color2;
-        $rate = 1.0 * floatval($row[0]) / (floatval($row[0]) + floatval($row[1]));
-        $rgb = array();
-        if ($rate > 0.5) {
-            $rate = ($rate - 0.5) / ($max_rate - 0.5);
-            for ($i = 0; $i < 3; $i ++) {
-                $rgb[$i] = floor($color1[$i] - ($color1[$i] - 255) * (1 - $rate));
-            }
-        } else {
-            $rate = (0.5 - $rate) / (0.5 - $min_rate);
-            for ($i = 0; $i < 3; $i ++) {
-                $rgb[$i] = floor($color2[$i] - ($color2[$i] - 255) * (1 - $rate));
-            }
-        }
-
-        return $rgb;
-    }
-
     protected function drawColorMap($set_id, $options, $tab_id)
     {
         if (!$dataset = DataSet::find($set_id)) {
@@ -203,20 +180,14 @@ class WmsController extends Pix_Controller
             $column_id = $config->tabs->{$tab_id}->column_id;
             $sql = "SELECT id, data->>{$column_id} FROM data_line WHERE id IN (" . implode(",", $data_ids) .")";
         } else {
-            $column1_id = $config->tabs->{$tab_id}->column1_id;
-            $column2_id = $config->tabs->{$tab_id}->column2_id;
-            $sql = "SELECT id, data->>{$column1_id}, data->>{$column2_id} FROM data_line WHERE id IN (" . implode(",", $data_ids) .")";
+            return $this->emptyImage();
         }
         $res = DataLine::getDb()->query($sql);
 
         while ($row = $res->fetch_array()){
             $id = array_shift($row);
 
-            if (property_exists($tab_info, 'column_id')) {
-                $rgb = ColorLib::getColor($row[0], ColorLib::getColorConfig($config, $tab_id));
-            } else {
-                $rgb = $this->getColor($row, $tab_info);
-            }
+            $rgb = ColorLib::getColor($row[0], ColorLib::getColorConfig($config, $tab_id));
 
             $feature = new StdClass;
             $feature->type = 'Feature';
