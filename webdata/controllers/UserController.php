@@ -12,23 +12,7 @@ class UserController extends Pix_Controller
         $layers = $_GET['Layers'];
         $layer_data = json_decode($layers);
 
-        $set = DataSet::find($layer_data->set_id);
-        if (!$set) {
-            return $this->noview();
-        }
-        if (!$config = json_decode($set->getEAV('config'))) {
-            return $this->noview();
-        }
-
-        $tab_id = $layer_data->tab;
-        if (!property_exists($config->tabs, $tab_id)) {
-            return $this->noview();
-        }
-
-        $colors = ColorLib::getColorConfig($config, $tab_id);
-        if (is_null($colors)) {
-            return $this->noview();
-        }
+        $colors = $layer_data->color_config;
 
         $height = 300;
         $padding = 5;
