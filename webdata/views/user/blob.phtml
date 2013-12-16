@@ -11,8 +11,8 @@ $set = DataSet::findByOptions($this->params);
 <?= $this->partial('common/header.phtml', $this); ?>
 <?= $this->partial('user/header.phtml', $this) ?>
 <hr>
-<button id="btn-import-csv" data-wording-importing="匯入中...">匯入</button>
-<a href="https://github.com/<?= urlencode($this->user) ?>/<?= urlencode($this->repository) ?>/blob/<?= urlencode($this->branch) ?>/<?= $this->escape($this->path) ?>" target="_blank">Github原始頁</a>
+<button id="btn-import-csv" data-wording-importing="Importing...">Import</button>
+<a href="https://github.com/<?= urlencode($this->user) ?>/<?= urlencode($this->repository) ?>/blob/<?= urlencode($this->branch) ?>/<?= $this->escape($this->path) ?>" target="_blank">Github Source</a>
 <?php if ($set and $set->getEAV('data_type') == 'geojson') { ?>
 <?= $this->partial('/user/blob_geojson.phtml', array('set' => $set)) ?>
 <?php } elseif ($set and $set->getEAV('data_type') == 'csvmap') { ?>
