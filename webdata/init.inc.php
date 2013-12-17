@@ -12,6 +12,7 @@ Pix_Loader::registerAutoLoad();
 if (file_exists(__DIR__ . '/config.php')) {
     include(__DIR__ . '/config.php');
 }
+Pix_Table::setLongQueryTime(3);
 // TODO: 之後要搭配 geoip
 date_default_timezone_set('Asia/Taipei');
 
