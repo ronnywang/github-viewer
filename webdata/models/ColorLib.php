@@ -14,7 +14,7 @@ class ColorLib
                 }
                 $ret_rgb = [];
                 for ($i = 0; $i < 3; $i ++) {
-                    $ret_rgb[$i] = floor($last_color[1][$i] + ($value - $last_color[0]) * ($rgb[$i] - $last_color[1][$i]) / ($v - $last_color[0]));
+                    $ret_rgb[$i] = $last_color[1][$i] + ($value - $last_color[0]) * ($rgb[$i] - $last_color[1][$i]) / ($v - $last_color[0]);
                 }
                 return $ret_rgb;
             }

@@ -28,7 +28,7 @@ class UserController extends Pix_Controller
         imagefill($gd, 0, 0, $bg_color);
 
         for ($i = 0; $i < $level; $i ++) {
-            $v = floor($min_val + $i * ($max_val - $min_val) / ($level - 1));
+            $v = $min_val + $i * ($max_val - $min_val) / ($level - 1);
             $rgb = ColorLib::getColor($v, $colors);
             $color = imagecolorallocate($gd, $rgb[0], $rgb[1], $rgb[2]);
             imagefilledrectangle($gd, 0, floor($padding + ($level - $i) * ($height - 2 * $padding) / $level), 40, floor($padding + ($level - $i - 1) * ($height - 2 * $padding) / $level), $color);
