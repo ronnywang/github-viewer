@@ -4,6 +4,13 @@ class ColorLib
 {
     public static function getColor($value, $colors)
     {
+        usort($colors, function($a, $b){
+            if ($a[0] == $b[0]) {
+                return 0;
+            }
+            return ($a[0] < $b[0]) ? -1 : 1;
+        });
+
         $last_color = null;
         foreach ($colors as $color) {
             list($v, $rgb) = $color;
