@@ -107,7 +107,7 @@ class WmsController extends Pix_Controller
         if ($layer_data->type == 'csvmap') {
             return $this->drawCSV(intval($layer_data->set_id), $options);
         } elseif ($layer_data->type == 'colormap') {
-            return $this->drawColorMap(intval($layer_data->set_id), $options, $layer_data);
+            return $this->drawColorMap($options, $layer_data);
         } elseif ($layer_data->type == 'geojson') {
             return $this->drawGeoJSON(intval($layer_data->set_id), $options);
         }
@@ -137,22 +137,25 @@ class WmsController extends Pix_Controller
         return $this->json($json);
     }
 
-    protected function drawColorMap($set_id, $options, $layer_data)
+    protected function drawColorMap($options, $layer_data)
     {
-        if (!$dataset = DataSet::find($set_id)) {
-            return $this->emptyImage();
-        }
-
-        if (!$mapset = DataSet::find($dataset->getEAV('map_from'))) {
-            return $this->emptyImage();
-        }
-
         $pixel = $options['pixel'];
 
-        $sql = "SELECT id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$pixel})) AS geojson FROM data_geometry WHERE set_id= {$mapset->set_id} AND geo && {$options['text']}";
+        $mapset_id = intval($layer_data->map_from);
+        $dataset_id = intval($layer_data->data_from);
+
+        $sql = "SELECT id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$pixel})) AS geojson FROM data_geometry WHERE set_id= {$mapset_id} AND geo && {$options['text']}";
         $res = DataGeometry::getDb()->query($sql);
 
-        $id_map = json_decode($dataset->getEAV('id_map'));
+        try {
+            $map = GeoDataMap::getMap($mapset_id, $dataset_id, $layer_data->map_columns, $layer_data->data_columns);
+        } catch (Exception $e) {
+            echo $e->getMessage();
+            exit;
+            return $this->emptyImage();
+        }
+
+        $id_map = json_decode($map->map);
         $id_map = array_combine($id_map[0], $id_map[1]);
 
         $json = new StdClass;
