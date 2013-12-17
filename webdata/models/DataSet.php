@@ -56,6 +56,10 @@ class DataSetRow extends Pix_Table_Row
             $data = array(
                 'type' => 'colormap',
                 'set_id' => $this->set_id,
+                'data_from' => $this->getEAV('data_from'),
+                'map_from' => $this->getEAV('map_from'),
+                'data_columns' => $config->data_columns,
+                'map_columns' => $config->map_columns,
             );
             if (!is_null($opt)) {
                 $data['color_config'] = ColorLib::getColorConfig($config, $opt);
