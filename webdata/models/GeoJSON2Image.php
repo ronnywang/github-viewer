@@ -239,7 +239,7 @@ class GeoJSON2Image
                 }
             }
 
-            if (!is_null($background_color)) {
+            if (!is_null($background_color) and count($filled_points) >= 6) {
                 imagefilledpolygon($gd, $filled_points, count($filled_points) / 2, $background_color);
             }
             break;
