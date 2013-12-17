@@ -170,7 +170,11 @@ class WmsController extends Pix_Controller
             return $this->emptyImage();
         }
 
-        $column_id = $layer_data->column_id;
+        if (!property_exists($layer_data, 'column_id')) {
+            return $this->emptyImage();
+        }
+        $column_id = intval($layer_data->column_id);
+
         $sql = "SELECT id, data->>{$column_id} FROM data_line WHERE id IN (" . implode(",", $data_ids) .")";
 
         $res = DataLine::getDb()->query($sql);
