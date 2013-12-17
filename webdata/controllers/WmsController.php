@@ -150,8 +150,6 @@ class WmsController extends Pix_Controller
         try {
             $map = GeoDataMap::getMap($mapset_id, $dataset_id, $layer_data->map_columns, $layer_data->data_columns);
         } catch (Exception $e) {
-            echo $e->getMessage();
-            exit;
             return $this->emptyImage();
         }
 
