@@ -68,28 +68,28 @@ class UserController extends Pix_Controller
             }
             return $this->json(array('error' => false, 'columns' => json_decode($set->getEAV('columns')), 'values' => json_decode($data_line->data)));
         } elseif ($layer->type == 'colormap') {
-            if (!$set = DataSet::find(intval($layer->set_id))) {
-                return $this->redirect('/');
-            }
-            if (!$mapset = DataSet::find($set->getEAV('map_from'))) {
-                return $this->redirect('/');
-            }
-            if (!$dataset = DataSet::find($set->getEAV('data_from'))){
-                return $this->redirect('/');
-            }
-            $sql = "SELECT id, ST_AsGeoJSON(merge_geo) AS json FROM (SELECT id, ST_Buffer(ST_Union(geo::geometry), {$pixel} * 2) as merge_geo FROM data_geometry WHERE set_id = {$mapset->set_id} AND geo && ST_PointFromText('POINT({$lng} {$lat})', 4326) GROUP BY id) AS merged_polygon WHERE ST_Contains(merge_geo, ST_GeomFromText('POINT({$lng} {$lat})', 4326))";
+            $mapset_id = intval($layer->map_from);
+            $dataset_id = intval($layer->data_from);
+
+            $sql = "SELECT id, ST_AsGeoJSON(merge_geo) AS json FROM (SELECT id, ST_Buffer(ST_Union(geo::geometry), {$pixel} * 2) as merge_geo FROM data_geometry WHERE set_id = {$mapset_id} AND geo && ST_PointFromText('POINT({$lng} {$lat})', 4326) GROUP BY id) AS merged_polygon WHERE ST_Contains(merge_geo, ST_GeomFromText('POINT({$lng} {$lat})', 4326))";
             $res = DataGeometry::getDb()->query($sql);
             if (!$row = $res->fetch_assoc()) {
                 return $this->json(array('error' => true, 'message' => 'not found'));
             }
 
-            $id_map = json_decode($set->getEAV('id_map'));
+            try {
+                $map = GeoDataMap::getMap($mapset_id, $dataset_id, $layer->map_columns, $layer->data_columns);
+            } catch (Exception $e) {
+                return $this->json(array('error' => true, 'message' => 'not found'));
+            }
+            $id_map = json_decode($map->map);
             $id_map = array_combine($id_map[0], $id_map[1]);
 
             if (!array_key_exists($row['id'], $id_map)) {
                 return $this->json(array('error' => true, 'message' => 'not found'));
             }
 
+            $dataset = DataSet::find($layer->data_from);
             if (!$data_line = DataLine::find($id_map[$row['id']])) {
                 $columns = array('錯誤', 'data_id');
                 $values = array('找不到這筆資料', $row['id']);
