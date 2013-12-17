@@ -47,7 +47,6 @@ class WmsController extends Pix_Controller
         $options['min_lat'] = $min_lat;
         $options['max_lat'] = $max_lat;
 
-
         $polygons = array();
         if ($max_lng < $min_lng) {
             if ($max_lng + 180 > 180) {
@@ -94,8 +93,12 @@ class WmsController extends Pix_Controller
         $srs = $this->getParam('srs');
         // minx, miny, maxx, maxy
         $bbox = $this->getParam('bbox');
-        $options['width'] = $this->getParam('width');
-        $options['height'] = $this->getParam('height');
+        $options['width'] = intval($this->getParam('width'));
+        $options['height'] = intval($this->getParam('height'));
+        if (!$options['width'] or !$options['height']) {
+            return $this->emptyImage();
+        }
+
         $format = $this->getParam('format');
         $options = array_merge($options, $this->getPixelTextByBBox($bbox, intval($options['width'])));
 
