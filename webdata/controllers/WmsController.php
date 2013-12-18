@@ -116,25 +116,60 @@ class WmsController extends Pix_Controller
     protected function getGeoJSONClickZone($set_id, $options)
     {
         if (!$dataset = DataSet::find($set_id)) {
-            return $this->json(0);
+            return $this->emptyImage();
         }
 
         $pixel = $options['pixel'];
-        $polygons = array();
-        foreach ($options['polygons'] as $polygon) {
-            $b = "ST_GeogFromText('POLYGON" . $polygon . "')";
-            $sql = "SELECT ST_AsGeoJSON(ST_Intersection(ST_UnaryUnion(ST_Collect(ST_Buffer(ST_Simplify(geo::geometry, {$pixel}), {$pixel} * 2, 2))), ({$b})::geometry)) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && {$b}";
-            $res = DataGeometry::getDb()->query($sql);
-            $ret = $res->fetch_assoc();
-            if ($json = json_decode($ret['geojson'])) {
-                $polygons[] = $json;
-            }
-        }
-        $json = new StdClass;
-        $json->type = 'GeometryCollection';
-        $json->geometries = $polygons;
 
-        return $this->json($json);
+        $sql = "SELECT id, ST_AsGeoJSON(ST_Simplify(geo::geometry, {$pixel})) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && {$options['text']}";
+
+        $res = DataGeometry::getDb()->query($sql);
+
+        $json = new StdClass;
+        $json->type = 'FeatureCollection';
+
+        $features = array();
+        $geojsons = array();
+        while ($row = $res->fetch_assoc()) {
+            $geojsons[$row['id']] = $row['geojson'];
+        }
+        $res->free_result();
+
+        if (!count($geojsons)) {
+            return $this->emptyImage();
+        }
+
+        foreach ($geojsons as $id => $geojson) {
+            $feature = new StdClass;
+            $feature->type = 'Feature';
+            $feature->properties = array(
+                'background_color' => array(0, 0, 0),
+                'border_color' => array(0, 0, 0),
+                'border_size' => 2,
+            );
+            $feature->geometry = json_decode($geojson);
+            $features[] = $feature;
+        }
+        $json->features = $features;
+
+        $obj = new GeoJSON2Image($json);
+        $obj->setSize($options['width']);
+        $obj->setBoundry(array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']));
+        $obj->draw();
+
+        $time[3] = microtime(true);
+
+        /*error_log(sprintf("total: %f, pgsql: %f(%d), mysql: %f(%d), png: %f, bbox: %s",
+            $time[3] - $time[0],
+            $time[1] - $time[0],
+            count($geojsons),
+            $time[2] -$time[1],
+            count($records),
+            $time[3] - $time[2],
+            $bbox));
+         */
+
+        return $this->noview();
     }
 
     protected function drawColorMap($options, $layer_data)
@@ -281,18 +316,69 @@ class WmsController extends Pix_Controller
     protected function getCSVClickZone($set_id, $options)
     {
         if (!$dataset = DataSet::find($set_id)) {
-            echo '404';
-            return $this->noview();
+            return $this->emptyImage();
         }
+        $time = array(microtime(true));
+
         $pixel = $options['pixel'];
-        $radius = 5 * $pixel;
 
-        $sql = "SELECT ST_AsGeoJSON(ST_Simplify(ST_UnaryUnion(ST_Collect(ST_Buffer(geom, {$radius}))), $pixel)) AS geojson FROM (SELECT ST_SnapToGrid(geo::geometry, {$pixel}) AS geom FROM geo_point WHERE group_id = {$set_id} AND geo && {$options['text']} GROUP BY geom) AS t";
+        $sql = "SELECT data_id, ST_AsGeoJSON(ST_SnapToGrid(geo::geometry, {$pixel})) AS geojson FROM geo_point WHERE group_id = {$set_id} AND geo && {$options['text']}";
+
         $res = GeoPoint::getDb()->query($sql);
+        $time[1] = microtime(true);
         $ret = $res->fetch_assoc();
-        $json = json_decode($ret['geojson']);
 
-        return $this->json($json);
+        $json = new StdClass;
+        $json->type = 'FeatureCollection';
+
+        $features = array();
+        $geojsons = array();
+        $points = array();
+        while ($row = $res->fetch_assoc()) {
+            if ($points[crc32($row['geojson'])]) {
+                continue;
+            }
+            $points[crc32($row['geojson'])] = true;
+            $geojsons[$row['data_id']] = $row['geojson'];
+        }
+        $res->free_result();
+
+        if (!count($geojsons)) {
+            return $this->emptyImage();
+        }
+
+        $time[2] = microtime(true);
+
+        foreach ($geojsons as $id => $geojson) {
+            $feature = new StdClass;
+            $feature->type = 'Feature';
+            $feature->properties = array(
+                'background_color' => array(0, 0, 0),
+                'border_color' => array(0, 0, 0),
+                'border_size' => 2,
+            );
+            $feature->geometry = json_decode($geojson);
+            $features[] = $feature;
+        }
+        $json->features = $features;
+
+        $obj = new GeoJSON2Image($json);
+        $obj->setSize($options['width']);
+        $obj->setBoundry(array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']));
+        $obj->draw();
+
+        $time[3] = microtime(true);
+
+        /*error_log(sprintf("total: %f, pgsql: %f(%d), mysql: %f(%d), png: %f, bbox: %s",
+            $time[3] - $time[0],
+            $time[1] - $time[0],
+            count($geojsons),
+            $time[2] -$time[1],
+            count($records),
+            $time[3] - $time[2],
+            $bbox));*/
+
+        return $this->noview();
     }
 
     protected function drawCSV($set_id, $options)

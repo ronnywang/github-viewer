@@ -21,6 +21,7 @@ main.onload_user_tree = function(){
 
 main.map_is_showed = false;
 
+
 main.show_map = function(){
   var tile_width = 400;
   var tile_height = 400;
@@ -39,59 +40,52 @@ main.show_map = function(){
     var ulw = projection.fromPointToLatLng(ul);
     var lrw = projection.fromPointToLatLng(lr);
 
-    return ulw.lng() + "," + ulw.lat() + "," + lrw.lng() + "," + lrw.lat();
+    return [ulw.lng(), ulw.lat(), lrw.lng(), lrw.lat()];
   };
-
-  var polygonJSONToGMapPolygon = function(json){
-    if (json.type != 'Polygon') {
-      throw "Must be Polygon";
-    }
-
-    var paths = [];
-    for (var i = 0; i < json.coordinates.length; i++) {
-      var linestrings = json.coordinates[i];
-      var path = [];
-      if (linestrings[0] != linestrings[linestrings.length - 1]) {
-        linestrings.push(linestrings[0]);
-      }
-      if (linestrings.length <= 3) {
-        continue;
-      }
-      for (var j = 0; j < linestrings.length; j ++){
-        var point = linestrings[j];
-        path.push(new google.maps.LatLng(point[1], point[0]));
-      }
-      paths.push(path);
-    }
-    return new google.maps.Polygon({
-      paths: paths,
-      fillOpacity: 0,
-      strokeWeight: 0
-    });
-  }
 
   var tile_set = [];
   var current_tile = 0;
-
-  var getPolygonsFromJSON = function(json){
-      if (json === null) { return []; }
-
-      if (json.type == 'Polygon') {
-          return [json.coordinates];
-      } else if (json.type == 'MultiPolygon') {
-          return json.coordinates;
-      } else if (json.type == 'GeometryCollection') {
-          var polygons = [];
-          for (var i = 0; i < json.geometries.length; i ++) {
-              polygons = polygons.concat(getPolygonsFromJSON(json.geometries[i]));
-          }
-          return polygons;
-      } else {
-          throw "Unknown type: " + json.type;
-      }
-  };
+  var tiles = {};
 
   var meter_set = {};
+
+  var map;
+
+  var mapOptions = {
+    streetViewControl: false,
+    minZoom: 1
+  };
+
+  map = new google.maps.Map(document.getElementById('data-tab-map'), mapOptions);
+
+  var clickable = false;
+
+  google.maps.event.addListener(map, 'mousemove', function(e){
+    var projection = map.getProjection();
+    var zpow = Math.pow(2, map.getZoom());
+
+    var point = projection.fromLatLngToPoint(e.latLng);
+    var tile_x = Math.floor((point.x * zpow / tile_width));
+    var tile_y = Math.floor((point.y * zpow / tile_height));
+    if ('undefined' === typeof(tiles[tile_x + ',' + tile_y + ',' + map.getZoom()])) {
+      return;
+    }
+    var x = Math.floor(point.x * zpow) % tile_width;
+    var y = Math.floor(point.y * zpow) % tile_height;
+    var data = tiles[tile_x + ',' + tile_y + ',' + map.getZoom()].getContext('2d').getImageData(x, y, 1, 1).data;
+    if (data[3]) {
+      map.setOptions({draggableCursor: 'pointer'});
+      clickable = true;
+    } else {
+      map.setOptions({draggableCursor: null});
+      clickable = false;
+    }
+  });
+  google.maps.event.addListener(map, 'click', function(e){
+    if (clickable) {
+      click_event(e);
+    }
+  });
 
   var addTile = function(wms_set){
     for (var i = 0; i < wms_set.length; i ++) {
@@ -104,6 +98,8 @@ main.show_map = function(){
     CoordMapType.prototype.maxZoom = 17;
     CoordMapType.prototype.getTile = function(coord, zoom, ownerDocument) {
       var bbox = getBBoxFromTileZoom(coord, zoom);
+      var southWest = new google.maps.LatLng(bbox[1], bbox[0]);
+      var northEast = new google.maps.LatLng(bbox[3], bbox[2]);
 
       var div_dom = $('<div></div>');
       var img = new Image;
@@ -112,7 +108,7 @@ main.show_map = function(){
       img.className = 'wms-tile-img';
       img.src_set = {};
       for (var i = 0; i < wms_set.length; i ++) {
-        img.src_set[wms_set[i][0]] = wms_set[i][1] + '&BBox=' + bbox + '&Width=' + tile_width + '&height=' + tile_height;
+        img.src_set[wms_set[i][0]] = wms_set[i][1] + '&BBox=' + bbox.join(',') + '&Width=' + tile_width + '&height=' + tile_height;
         if (wms_set[i].length > 2) {
           meter_set[i] = wms_set[i][2];
           if (i == 0) {
@@ -128,46 +124,32 @@ main.show_map = function(){
 
       if ($('#data-tab-map').attr('data-clickzone-url')) {
         var clickzone_url = $('#data-tab-map').attr('data-clickzone-url');
-        clickzone_url += '&BBox=' + bbox + '&Width=' + tile_width + '&height=' + tile_height;
-        $.get(clickzone_url, function(ret){
-          if (null === ret || 'object' != typeof(ret) || 'undefined' === typeof(ret.type)) {
-            return;
-          }
-          var polygons = getPolygonsFromJSON(ret);
-          gmap_polygons = polygons.map(function(poly){
-            var gmap_polygon = polygonJSONToGMapPolygon({type: 'Polygon', coordinates: poly});
-            gmap_polygon.setMap(map);
-            google.maps.event.addListener(gmap_polygon, 'click', click_event);
-            return gmap_polygon;
-          });
-          div_dom.data('gmap_polygons', gmap_polygons);
-        }, 'json');
+        clickzone_url += '&BBox=' + bbox.join(',') + '&Width=' + tile_width + '&height=' + tile_height;
+        var clickzone_img = new Image;
+        clickzone_img.src = clickzone_url;
+        clickzone_img.onload = function(){
+          var canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 400;
+          canvas.getContext('2d').drawImage(clickzone_img, 0, 0);
+          tiles[coord.x + ',' + coord.y + ',' + zoom] = canvas;
+        };
       }
       return div_dom.width(this.tileSize.width).height(this.tileSize.height).append(img)[0];
     };
+
     CoordMapType.prototype.releaseTile = function(node){
-      if ('undefined' !== typeof($(node).data('gmap_polygons'))) {
-        $(node).data('gmap_polygons').map(function(p){ p.setMap(null); delete(p); });
-      }
     };
+
     CoordMapType.prototype.name = 'WMS';
     var coordinateMapType = new CoordMapType();
     map.overlayMapTypes.insertAt(0, coordinateMapType);
   }
 
-  var map;
 
   var matches = document.location.hash.match('#([0-9.]*),([0-9.]*),([0-9]*)');
   var zoom = 8;
   var lat = 23.9720;
   var lng = 120.9777;
-
-  var mapOptions = {
-    streetViewControl: false,
-    minZoom: 1
-  };
-
-  map = new google.maps.Map(document.getElementById('data-tab-map'), mapOptions);
   if (matches) {
     zoom = parseInt(matches[3]);
     lat = parseFloat(matches[1]);
