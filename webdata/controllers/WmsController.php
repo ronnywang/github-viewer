@@ -123,7 +123,7 @@ class WmsController extends Pix_Controller
         $polygons = array();
         foreach ($options['polygons'] as $polygon) {
             $b = "ST_GeogFromText('POLYGON" . $polygon . "')";
-            $sql = "SELECT ST_AsGeoJSON(ST_Intersection(ST_UnaryUnion(ST_Collect(ST_Buffer(ST_Simplify(geo::geometry, {$pixel}), {$pixel} * 2))), ({$b})::geometry)) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && {$b}";
+            $sql = "SELECT ST_AsGeoJSON(ST_Intersection(ST_UnaryUnion(ST_Collect(ST_Buffer(ST_Simplify(geo::geometry, {$pixel}), {$pixel} * 2, 2))), ({$b})::geometry)) AS geojson FROM data_geometry WHERE set_id= {$set_id} AND geo && {$b}";
             $res = DataGeometry::getDb()->query($sql);
             $ret = $res->fetch_assoc();
             if ($json = json_decode($ret['geojson'])) {
