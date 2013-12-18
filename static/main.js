@@ -113,6 +113,7 @@ main.show_map = function(){
           meter_set[i] = wms_set[i][2];
           if (i == 0) {
             meterDiv.src = wms_set[i][2];
+            meterDiv.style.display = 'block';
           }
         }
       }
@@ -218,7 +219,6 @@ main.show_map = function(){
       current_tile = this.data_id;
       if (meter_url = meter_set[this.data_id]) {
         meterDiv.src = meter_url;
-        meterDiv.style.display = 'block';
       }
       $('.wms-tile-img').each(function(){
         img = this;
