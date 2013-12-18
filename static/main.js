@@ -179,6 +179,7 @@ main.show_map = function(){
   controlDiv.style.padding = '5px';
   meterDiv.style.width = '100px';
   meterDiv.style.height = '300px';
+  meterDiv.style.display = 'none';
 
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(controlDiv);
   map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(meterDiv);
@@ -217,6 +218,7 @@ main.show_map = function(){
       current_tile = this.data_id;
       if (meter_url = meter_set[this.data_id]) {
         meterDiv.src = meter_url;
+        meterDiv.style.display = 'block';
       }
       $('.wms-tile-img').each(function(){
         img = this;
