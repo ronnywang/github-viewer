@@ -126,6 +126,7 @@ main.show_map = function(){
         var clickzone_url = $('#data-tab-map').attr('data-clickzone-url');
         clickzone_url += '&BBox=' + bbox.join(',') + '&Width=' + tile_width + '&height=' + tile_height;
         var clickzone_img = new Image;
+        clickzone_img.crossOrigin = 'Anonymous';
         clickzone_img.src = clickzone_url;
         clickzone_img.onload = function(){
           var canvas = document.createElement('canvas');
