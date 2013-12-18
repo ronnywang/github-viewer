@@ -45,10 +45,13 @@ class DataSetRow extends Pix_Table_Row
 
     public function getLayerID($opt = null)
     {
+        $version = '2013121900';
+
         if ($this->getEAV('data_type') == 'geojson') {
             return json_encode(array(
                 'type' => 'geojson',
                 'set_id' => $this->set_id,
+                'version' => $version,
             ));
         } elseif ($this->getEAV('data_type') == 'colormap') {
             $config = json_decode($this->getEAV('config'));
@@ -59,6 +62,7 @@ class DataSetRow extends Pix_Table_Row
                 'map_from' => $this->getEAV('map_from'),
                 'data_columns' => $config->data_columns,
                 'map_columns' => $config->map_columns,
+                'version' => $version,
             );
             if (!is_null($opt)) {
                 $data['color_config'] = ColorLib::getColorConfig($config, $opt);
@@ -69,6 +73,7 @@ class DataSetRow extends Pix_Table_Row
             return json_encode(array(
                 'type' => 'csvmap',
                 'set_id' => $this->set_id,
+                'version' => $version,
             ));
         }
         return json_encode(array(
