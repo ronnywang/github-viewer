@@ -56,9 +56,10 @@ class UserController extends Pix_Controller
             if (!$set = DataSet::find(intval($layer->set_id))) {
                 return $this->redirect('/');
             }
-            $sql = "SELECT id, ST_AsGeoJSON(merge_geo) AS json FROM (SELECT id, ST_Buffer(ST_Union(geo::geometry), {$pixel} * 2) as merge_geo FROM data_geometry WHERE set_id = {$set->set_id} AND geo && ST_PointFromText('POINT({$lng} {$lat})', 4326) GROUP BY id) AS merged_polygon WHERE ST_Contains(merge_geo, ST_GeomFromText('POINT({$lng} {$lat})', 4326))";
+            $sql = "SELECT id, ST_AsGeoJSON(geo) AS json FROM data_geometry WHERE set_id = {$set->set_id} AND geo && ST_PointFromText('POINT({$lng} {$lat})', 4326) ORDER BY ST_Distance(geo, ST_PointFromText('POINT({$lng} {$lat})', 4326)) ASC LIMIT 1";
             $res = DataGeometry::getDb()->query($sql);
             if (!$row = $res->fetch_assoc()) {
+                var_dump($row);
                 return $this->json(array('error' => true, 'message' => 'not found'));
             }
             if (!$data_line = DataLine::search(array('set_id' => $set->set_id, 'id' => $row['id']))->first()) {
@@ -71,7 +72,7 @@ class UserController extends Pix_Controller
             $mapset_id = intval($layer->map_from);
             $dataset_id = intval($layer->data_from);
 
-            $sql = "SELECT id, ST_AsGeoJSON(merge_geo) AS json FROM (SELECT id, ST_Buffer(ST_Union(geo::geometry), {$pixel} * 2) as merge_geo FROM data_geometry WHERE set_id = {$mapset_id} AND geo && ST_PointFromText('POINT({$lng} {$lat})', 4326) GROUP BY id) AS merged_polygon WHERE ST_Contains(merge_geo, ST_GeomFromText('POINT({$lng} {$lat})', 4326))";
+            $sql = "SELECT id, ST_AsGeoJSON(geo) AS json FROM data_geometry WHERE set_id = {$mapset_id} AND geo && ST_PointFromText('POINT({$lng} {$lat})', 4326) ORDER BY ST_Distance(geo, ST_PointFromText('POINT({$lng} {$lat})', 4326)) ASC LIMIT 1";
             $res = DataGeometry::getDb()->query($sql);
             if (!$row = $res->fetch_assoc()) {
                 return $this->json(array('error' => true, 'message' => 'not found'));
