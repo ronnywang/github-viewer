@@ -153,7 +153,7 @@ class WmsController extends Pix_Controller
         $json->features = $features;
 
         $obj = new GeoJSON2Image($json);
-        $obj->setSize($options['width']);
+        $obj->setSize($options['width'], $options['height']);
         $obj->setBoundry(array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']));
         $obj->draw();
 
@@ -236,7 +236,7 @@ class WmsController extends Pix_Controller
         $json->features = $features;
 
         $obj = new GeoJSON2Image($json);
-        $obj->setSize($options['width']);
+        $obj->setSize($options['width'], $options['height']);
         $obj->setBoundry(array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']));
         $obj->draw();
 
@@ -294,7 +294,7 @@ class WmsController extends Pix_Controller
         $json->features = $features;
 
         $obj = new GeoJSON2Image($json);
-        $obj->setSize($options['width']);
+        $obj->setSize($options['width'], $options['height']);
         $obj->setBoundry(array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']));
         $obj->draw();
 
@@ -363,7 +363,7 @@ class WmsController extends Pix_Controller
         $json->features = $features;
 
         $obj = new GeoJSON2Image($json);
-        $obj->setSize($options['width']);
+        $obj->setSize($options['width'], $options['height']);
         $obj->setBoundry(array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']));
         $obj->draw();
 
@@ -431,7 +431,7 @@ class WmsController extends Pix_Controller
         $json->features = $features;
 
         $obj = new GeoJSON2Image($json);
-        $obj->setSize($options['width']);
+        $obj->setSize($options['width'], $options['height']);
         $obj->setBoundry(array($options['min_lng'], $options['max_lng'], $options['min_lat'], $options['max_lat']));
         $obj->draw();
 
