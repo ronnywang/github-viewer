@@ -315,9 +315,10 @@ main.onload_user_blob = function(){
           return;
         } else if (stage_status[0] == 'finish') {
           document.location.reload();
+          return;
         }
       }  
-      setTimeout(3000, function(){ check_importing(job_id); });
+      setTimeout(function(){ check_importing(job_id); }, 3000);
     }, 'json');
   };
 
