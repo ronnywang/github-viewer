@@ -2,9 +2,9 @@
 
 class Importer_CSV
 {
-    public function import($github_options)
+    public function import($github_options, $job)
     {
-        $github_obj = GithubObject::getObject($github_options);
+        $github_obj = GithubObject::getObject($github_options, $job);
         if ($set = $github_obj->getDataSet()) {
             // 沒改變，不需要重新整理
             return 0;

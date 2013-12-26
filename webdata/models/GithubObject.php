@@ -2,12 +2,13 @@
 
 class GithubObject
 {
-    public static function getObject($github_options)
+    public static function getObject($github_options, $worker_job)
     {
-        return new GithubObject($github_options);
+        return new GithubObject($github_options, $worker_job);
     }
 
     protected $_github_options = null;
+    protected $_worker_job = null;
 
     protected $_content_data = null;
 
@@ -160,6 +161,10 @@ class GithubObject
         $download_fp = tmpfile();
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_FILE, $download_fp);
+        curl_setopt($curl, CURLOPT_PROGRESSFUNCTION, function($curl, $download_size, $downloaded, $upload_size, $uploaded){
+            $this->_worker_job->updateStatus('github_getcontent', "{$downloaded}/{$download_size}");
+        });
+        curl_setopt($curl, CURLOPT_NOPROGRESS, false); 
         curl_setopt($curl, CURLOPT_ENCODING, 'gzip,deflate'); 
         curl_setopt($curl, CURLOPT_USERAGENT, 'GitHub Map+ http://github.ronny.tw');
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: token ' . getenv('GITHUB_TOKEN')));
@@ -180,8 +185,9 @@ class GithubObject
         return $result_file;
     }
 
-    public function __construct($github_options)
+    public function __construct($github_options, $worker_job)
     {
         $this->_github_options = $github_options;
+        $this->_worker_job = $worker_job;
     }
 }

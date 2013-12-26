@@ -2,9 +2,9 @@
 
 class Importer_JSON
 {
-    public function import($github_options)
+    public function import($github_options, $job)
     {
-        $github_obj = GithubObject::getObject($github_options);
+        $github_obj = GithubObject::getObject($github_options, $job);
         if ($set = $github_obj->getDataSet() and in_array($set->getEAV('data_type'), array('geojson'))) {
             // 沒改變，不需要重新整理
             if (!$_GET['force']) {
@@ -44,7 +44,7 @@ class Importer_JSON
                 'path' => $path,
                 'branch' => 'master',
             );
-            Importer_JSON::import($mapfile_github_options);
+            Importer_JSON::import($mapfile_github_options, $job);
             $mapfile_set = DataSet::findByOptions($mapfile_github_options);
 
             // 檢查 data_repo
@@ -61,7 +61,7 @@ class Importer_JSON
                 'path' => $path,
                 'branch' => 'master',
             );
-            Importer_CSV::import($datafile_github_options);
+            Importer_CSV::import($datafile_github_options, $job);
             $datafile_set = DataSet::findByOptions($datafile_github_options);
 
             try {
@@ -107,7 +107,7 @@ class Importer_JSON
                 'path' => $path,
                 'branch' => $branch,
             );
-            Importer_CSV::import($data_github_options);
+            Importer_CSV::import($data_github_options, $job);
             $data_set = DataSet::findByOptions($data_github_options);
             $data_columns = json_decode($data_set->getEAV('columns'));
             if (false === ($lat_id = array_search(strval($json->latlng[0]), $data_columns))) {
@@ -152,7 +152,13 @@ class Importer_JSON
 
             $set = $github_obj->getDataSet(true);
 
+            $feature_count = count(glob($target_path . '/*.json'));
+            $i = 0;
             foreach (glob($target_path . '/*.json') as $feature_file) {
+                $i ++;
+                if ($i % 100 == 0) {
+                    $job->updateStatus('import-feature', "{$i}/{$feature_count}");
+                }
                 $feature = json_decode(file_get_contents($feature_file));
                 $inserted += self::importGeoJSON($feature, $set, null, $columns);
             }

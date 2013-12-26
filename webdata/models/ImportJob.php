@@ -10,6 +10,7 @@ class ImportJobRow extends Pix_Table_Row
 
     public function updateStatus($stage, $info)
     {
+        error_log($stage . ' ' . json_encode($info));
         if (!$job_status = ImportJobStatus::find($this->id)) {
             $status = new StdClass;
             $status->current_stage = null;

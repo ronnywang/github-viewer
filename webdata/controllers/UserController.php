@@ -158,13 +158,26 @@ class UserController extends Pix_Controller
         return $this->json($ret);
     }
 
-    public function importDone($message, $error = true)
+    public function getimportstatusAction()
     {
-        if ($_GET['return_to'] == 'iframe') {
-            $path = '/' . urlencode($this->user) . '/' . urlencode($this->repository) . '/iframe/map/' . urlencode($this->branch) . '/' . $this->path . '?commit=' . urlencode($this->commit);
-            return $this->alert($message, $path);
-        } 
-        return $this->json(array('error' => $error, 'message' => $message));
+        $id = intval($_GET['id']);
+
+        if ($import_job_status = ImportJobStatus::find($id)) {
+            return $this->json(array(
+                'status' => 'importing',
+                'data' => json_decode(ImportJobStatus::find($id)->status),
+            ));
+        }
+
+        if ($import_job = ImportJob::find($id)) {
+            return $this->json(array(
+                'status' => 'waiting',
+            ));
+        }
+
+        return $this->json(array(
+            'status' => 'not_found',
+        ));
     }
 
     public function importcsvAction()
@@ -182,19 +195,11 @@ class UserController extends Pix_Controller
             'branch' => $branch,
         );
 
-        try {
-            if (preg_match('#json$#', $path)) {
-                // JSON
-                $count = Importer_JSON::import($github_options);
-            } elseif (preg_match('#\.csv$#', $path)) {
-                $count = Importer_CSV::import($github_options);
-            } else {
-                return $this->importDone("Unsupported file format", true);
-            }
-        } catch (Importer_Exception $e) {
-            return $this->importDone($e->getMessage(), true);
-        }
-        return $this->importDone("Imported successful", false);
+        $job = ImportJob::addJob($github_options);
+
+        return $this->json(array(
+            'id' => $job->id,
+        ));
     }
 
     public function iframeAction($params)

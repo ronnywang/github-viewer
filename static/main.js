@@ -297,6 +297,30 @@ main.onload_user_blob = function(){
     $('#btn-tab-map').click();
   }
 
+  var check_importing = function(job_id){
+    $.get('/user/getimportstatus?id=' + parseInt(job_id), function(ret){
+      if (ret.status == 'not_found') {
+        alert('Import job is not found');
+        document.location.reload();
+        return;
+      }
+
+      if (ret.status == 'waiting') {
+        $('#btn-import-csv').text('Waiting');
+      } else if (ret.status == 'importing') {
+        var stage_status = ret.stage_status[ret.current_stage];
+        if (stage_status[0] == 'error') {
+          alert('Error: ' + stage_status[1]);
+          document.location.reload();
+          return;
+        } else if (stage_status[0] == 'finish') {
+          document.location.reload();
+        }
+      }  
+      setTimeout(3000, function(){ check_importing(job_id); });
+    }, 'json');
+  };
+
   $('#btn-import-csv').click(function(e){
     $(this).text($(this).attr('data-wording-importing'));
 
@@ -305,7 +329,8 @@ main.onload_user_blob = function(){
           alert(ret.message);
           return;
         }
-        document.location.reload();
+        var job_id = ret.id;
+        check_importing(job_id);
     }, 'json');
   });
 
