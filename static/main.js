@@ -310,13 +310,14 @@ main.onload_user_blob = function(){
       } else if (ret.status == 'importing') {
         var stage_status = ret.data.stage_status[ret.data.current_stage];
         if (stage_status[0] == 'error') {
-          alert('Error: ' + stage_status[1]);
+          alert('Error: ' + stage_status[2]);
           document.location.reload();
           return;
         } else if (stage_status[0] == 'finish') {
           document.location.reload();
           return;
         }
+        $('#btn-import-csv').text(stage_status[0] + ':' + stage_status[2]);
       }  
       setTimeout(function(){ check_importing(job_id); }, 3000);
     }, 'json');
