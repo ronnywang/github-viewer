@@ -28,7 +28,7 @@ class ImportWorker
                     throw new Exception("Unsupported file format");
                 }
                 $job->updateStatus('finish', 'done');
-            } catch (Importer_Exception $e) {
+            } catch (Exception $e) {
                 $job->updateStatus('error', $e->getMessage());
             }
 
