@@ -317,6 +317,8 @@ main.onload_user_blob = function(){
       $('#blob-content').text("(Sorry about that, but we can't show files that are this big right now.)");
     } else if (ret.data.message == 'Not Found') {
       $('#blob-content').text("(File Not Found)");
+    } else if (ret.meta.status == 403) {
+      $('#blob-content').text("403: " + ret.data.message);
     } else {
       $('#blob-content').text(Base64.decode(ret.data.content));
     }
