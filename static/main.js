@@ -308,7 +308,7 @@ main.onload_user_blob = function(){
       if (ret.status == 'waiting') {
         $('#btn-import-csv').text('Waiting');
       } else if (ret.status == 'importing') {
-        var stage_status = ret.stage_status[ret.current_stage];
+        var stage_status = ret.data.stage_status[ret.data.current_stage];
         if (stage_status[0] == 'error') {
           alert('Error: ' + stage_status[1]);
           document.location.reload();
