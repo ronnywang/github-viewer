@@ -1,5 +1,9 @@
 var main = {};
 
+main.onload_user_import = function(){
+  main.register_import_button();
+};
+
 main.onload_user_tree = function(){
   $.get('https://api.github.com/repos/' + encodeURIComponent(main.params.user) + '/' + encodeURIComponent(main.params.repository) + '/contents/' + main.params.path + '?ref=' + encodeURIComponent(main.params.branch), function(ret){
     $('#file-table').empty();
@@ -21,6 +25,47 @@ main.onload_user_tree = function(){
 
 main.map_is_showed = false;
 
+main.register_import_button = function(){
+  var check_importing = function(job_id){
+    $.get('/user/getimportstatus?id=' + parseInt(job_id), function(ret){
+      if (ret.status == 'not_found') {
+        alert('Import job is not found');
+        document.location.reload();
+        return;
+      }
+
+      if (ret.status == 'waiting') {
+        $('#btn-import-csv').text('Waiting');
+      } else if (ret.status == 'importing') {
+        var stage_status = ret.data.stage_status[ret.data.current_stage];
+        if (stage_status[0] == 'error') {
+          alert('Error: ' + stage_status[2]);
+          document.location.reload();
+          return;
+        } else if (stage_status[0] == 'finish') {
+          document.location.reload();
+          return;
+        }
+        $('#btn-import-csv').text(stage_status[0] + ':' + stage_status[2]);
+      }  
+      setTimeout(function(){ check_importing(job_id); }, 3000);
+    }, 'json');
+  };
+
+  $('#btn-import-csv').click(function(e){
+    $(this).text($(this).attr('data-wording-importing'));
+
+    $.post($(this).attr('data-import-link'), {}, function(ret){
+        if (ret.error) {
+          alert(ret.message);
+          return;
+        }
+        var job_id = ret.id;
+        check_importing(job_id);
+    }, 'json');
+  });
+
+};
 
 main.show_map = function(){
   var tile_width = 400;
@@ -297,44 +342,7 @@ main.onload_user_blob = function(){
     $('#btn-tab-map').click();
   }
 
-  var check_importing = function(job_id){
-    $.get('/user/getimportstatus?id=' + parseInt(job_id), function(ret){
-      if (ret.status == 'not_found') {
-        alert('Import job is not found');
-        document.location.reload();
-        return;
-      }
-
-      if (ret.status == 'waiting') {
-        $('#btn-import-csv').text('Waiting');
-      } else if (ret.status == 'importing') {
-        var stage_status = ret.data.stage_status[ret.data.current_stage];
-        if (stage_status[0] == 'error') {
-          alert('Error: ' + stage_status[2]);
-          document.location.reload();
-          return;
-        } else if (stage_status[0] == 'finish') {
-          document.location.reload();
-          return;
-        }
-        $('#btn-import-csv').text(stage_status[0] + ':' + stage_status[2]);
-      }  
-      setTimeout(function(){ check_importing(job_id); }, 3000);
-    }, 'json');
-  };
-
-  $('#btn-import-csv').click(function(e){
-    $(this).text($(this).attr('data-wording-importing'));
-
-    $.post('/user/importcsv?user=' + encodeURIComponent(main.params.user) + '&repository=' + encodeURIComponent(main.params.repository) + '&path=' + encodeURIComponent(main.params.path) + '&branch=' + encodeURIComponent(main.params.branch), {}, function(ret){
-        if (ret.error) {
-          alert(ret.message);
-          return;
-        }
-        var job_id = ret.id;
-        check_importing(job_id);
-    }, 'json');
-  });
+  main.register_import_button();
 
   if (!$('#blob-content').length) {
     return;
@@ -379,6 +387,10 @@ main.onload = function(){
 
   if ($('body').is('.user_iframe')){
     main.onload_user_iframe();
+  }
+
+  if ($('body').is('.user_import')) {
+    main.onload_user_import();
   }
 };
 

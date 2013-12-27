@@ -1,6 +1,6 @@
 <?php
 
-$this->view->body_class = 'user_import';
+$this->body_class = 'user_import';
 ?>
 <!DOCTYPE html>
 <html>
@@ -25,9 +25,10 @@ _gaq.push(['_trackPageview']);
 </script>
 </head>
 <body class="<?= $this->body_class ?>">
-<form method="POST" action="/user/importcsv?user=<?= urlencode($this->user) ?>&repository=<?= urlencode($this->repository) ?>&path=<?= urlencode($this->path) ?>&branch=<?= urlencode($this->branch) ?>&commit=<?= urlencode($this->commit) ?>&return_to=iframe">
-    Do you want to import this file to GitHub Map+? <button type="submit">Import</button>
-</form>
+<p>
+Do you want to import this file to GitHub Map+? <button id="btn-import-csv" data-wording-importing="importing..."
+    data-import-link="/user/importcsv?user=<?= urlencode($this->user) ?>&repository=<?= urlencode($this->repository) ?>&path=<?= urlencode($this->path) ?>&branch=<?= urlencode($this->branch) ?>&commit=<?= urlencode($this->commit) ?>">Import</button>
+</p>
 Support file format: GeoJSON, TopoJSON, CSV
 </body>
 </html>
