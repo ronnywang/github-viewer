@@ -160,6 +160,8 @@ class UserController extends Pix_Controller
 
     public function getimportstatusAction()
     {
+        header('Cache-Control: no-cache');
+
         $id = intval($_GET['id']);
 
         if ($import_job_status = ImportJobStatus::find($id)) {
