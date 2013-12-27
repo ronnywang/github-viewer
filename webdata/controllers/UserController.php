@@ -225,6 +225,7 @@ class UserController extends Pix_Controller
         }
 
         if (!$this->view->set) {
+            $this->view->commit = strval($_GET['commit']);
             return $this->redraw('/user/import.phtml');
         }
 
