@@ -138,6 +138,9 @@ class GithubObject
 
         case 'commit':
             $this->getCommitId();
+            if ($this->_commit_data->message == 'Not Found') {
+                throw new Importer_Exception('file not found');
+            }
             return $this->_commit_data[0]->sha;
 
         case 'file_path':
