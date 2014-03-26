@@ -22,7 +22,7 @@ class ImportWorker
                 if (preg_match('#json$#', $github_options['path'])) {
                     // JSON
                     $count = Importer_JSON::import($github_options, $job);
-                } elseif (preg_match('#\.csv$#', $path)) {
+                } elseif (preg_match('#\.csv$#', $github_options['path'])) {
                     $count = Importer_CSV::import($github_options, $job);
                 } else {
                     throw new Exception("Unsupported file format");
