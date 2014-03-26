@@ -145,12 +145,29 @@ class GithubObject
 
         case 'file_path':
             $this->getContentData();
-            if ($this->_content_data->size === 0 or $this->_content_data->content !== '') {
+            if ($this->_content_data->size === 0 or $this->_content_data->content != '') {
                 $file = Helper::getTmpFile();
                 file_put_contents($file, base64_decode($this->_content_data->content));
                 return $file;
             }
-            return $this->getFullBodyFilePath($this->_content_data->git_url);
+
+            $terms = explode('/', $this->path);
+            $filename = array_pop($terms);
+            $path = implode('/', $terms);
+            $url = 'https://api.github.com/repos/' . urlencode($this->user) . '/' . urlencode($this->repository) . '/contents/' . urlencode($path) . '?ref=' . urlencode($this->branch);
+            $curl = curl_init($url);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_ENCODING, 'gzip,deflate'); 
+            curl_setopt($curl, CURLOPT_USERAGENT, 'GitHub Map+ http://github.ronny.tw');
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: token ' . getenv('GITHUB_TOKEN')));
+            $ret = curl_exec($curl);
+            curl_close($curl);
+            foreach (json_decode($ret) as $file) {
+                if ($file->name == $filename) {
+                    return $this->getFullBodyFilePath($file->git_url);
+                }
+            }
+            throw new Importer_Exception("get content failed");
 
         default:
             throw new Exception("unknown GithubObject type: {$type}");
