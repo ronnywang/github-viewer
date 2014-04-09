@@ -65,7 +65,7 @@ class Importer_JSON
             $datafile_set = DataSet::findByOptions($datafile_github_options);
 
             try {
-                GeoDataMap::getMap($mapfile_set->set_id, $datafile_set->set_id, $json->map_columns, $json->data_columns);
+                GeoDataMap::getMap($mapfile_set->set_id, $datafile_set->set_id, $json->map_columns, $json->data_columns, true);
             } catch (Exception $e){
                 throw new Importer_Exception($e->getMessage());
             }
@@ -84,7 +84,6 @@ class Importer_JSON
                     throw new Importer_Exception("no column");
                 }
             }
-
             $set = $github_obj->getDataSet(true);
             $set->setEAV('data_from', $datafile_set->set_id);
             $set->setEAV('map_from', $mapfile_set->set_id);

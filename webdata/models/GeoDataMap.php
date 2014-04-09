@@ -15,7 +15,7 @@ class GeoDataMap extends Pix_Table
         $this->_columns['created_at'] = array('type' => 'int');
     }
 
-    public static function getMap($map_set_id, $data_set_id, $map_columns, $data_columns)
+    public static function getMap($map_set_id, $data_set_id, $map_columns, $data_columns, $force_update = false)
     {
         $map = GeoDataMap::find(array(
             'data_set_id' => $data_set_id,
@@ -24,7 +24,11 @@ class GeoDataMap extends Pix_Table
         ));
 
         if ($map) {
-            return $map;
+            if ($force_update) {
+                $map->delete();
+            } else {
+                return $map;
+            }
         }
         if (!$datafile_set = DataSet::find($data_set_id)) {
             throw new Exception("DataSet {$data_set_id} is not found");
