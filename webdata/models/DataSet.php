@@ -45,7 +45,7 @@ class DataSetRow extends Pix_Table_Row
 
     public function getLayerID($opt = null)
     {
-        $version = '2013121900';
+        $version = '2014040900';
 
         if ($this->getEAV('data_type') == 'geojson') {
             return json_encode(array(
