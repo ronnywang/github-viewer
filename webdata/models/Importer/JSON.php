@@ -65,10 +65,14 @@ class Importer_JSON
             $datafile_set = DataSet::findByOptions($datafile_github_options);
 
             try {
-                GeoDataMap::getMap($mapfile_set->set_id, $datafile_set->set_id, $map_columns, $data_columns);
+                GeoDataMap::getMap($mapfile_set->set_id, $datafile_set->set_id, $json->map_columns, $json->data_columns);
             } catch (Exception $e){
                 throw new Importer_Exception($e->getMessage());
             }
+            if (!$datafile_set = DataSet::find($datafile_set->set_id)) {
+                throw new Exception("DataSet {$datafile_set->set_id} is not found");
+            }
+            $datafile_columns = json_decode($datafile_set->getEAV('columns'));
 
             foreach ($json->tabs as $tab_id => $tab_info) {
                 if (property_exists($tab_info, 'column')) {
