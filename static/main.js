@@ -156,7 +156,7 @@ main.show_map = function(){
         img.src_set[wms_set[i][0]] = wms_set[i][1] + '&BBox=' + bbox.join(',') + '&Width=' + tile_width + '&height=' + tile_height;
         if (wms_set[i].length > 2) {
           meter_set[i] = wms_set[i][2];
-          if (i == 0) {
+          if (i == current_tile) {
             meterDiv.src = wms_set[i][2];
             meterDiv.style.display = 'block';
           }
