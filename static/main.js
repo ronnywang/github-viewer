@@ -228,7 +228,7 @@ main.show_map = function(){
   meterDiv.style.display = 'none';
 
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(controlDiv);
-  map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(meterDiv);
+  map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(meterDiv);
 
   var addCustomControl = function(name, id){
     // Set CSS for the control border.
