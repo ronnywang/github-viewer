@@ -38,6 +38,7 @@ class DataSetRow extends Pix_Table_Row
                 $id,
                 getenv('CDN_PREFIX') . '/wms?Request=GetMap&Layers=' . urlencode($this->getLayerID($id)),
                 getenv('CDN_PREFIX') . '/user/meter?Layers=' . urlencode($this->getLayerID($id)),
+                '/user/getdatafrompoint/?Layers=' . urlencode($this->getLayerID($id)),
             );
         }
         return json_encode($objs);

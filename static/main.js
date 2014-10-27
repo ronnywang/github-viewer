@@ -93,6 +93,7 @@ main.show_map = function(){
   var tiles = {};
 
   var meter_set = {};
+  var click_url_set = {};
 
   var map;
 
@@ -156,6 +157,7 @@ main.show_map = function(){
         img.src_set[wms_set[i][0]] = wms_set[i][1] + '&BBox=' + bbox.join(',') + '&Width=' + tile_width + '&height=' + tile_height;
         if (wms_set[i].length > 2) {
           meter_set[i] = wms_set[i][2];
+          click_url_set[i] = wms_set[i][3];
           if (i == current_tile) {
             meterDiv.src = wms_set[i][2];
             meterDiv.style.display = 'block';
@@ -287,7 +289,7 @@ main.show_map = function(){
   });
 
   var click_event = function(e){
-   $.get($('#data-tab-map').attr('data-click-url') + '&lat=' + e.latLng.lat() + '&lng=' + e.latLng.lng(), function(ret){
+   $.get(click_url_set[current_tile] + '&lat=' + e.latLng.lat() + '&lng=' + e.latLng.lng(), function(ret){
      var div_dom = $('<div></div>');
      div_dom.css({'width': '100%', 'max-height':'250px', 'overflow': 'scroll'});
      div_dom.empty();

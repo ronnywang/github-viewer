@@ -46,7 +46,7 @@ class UserController extends Pix_Controller
 
     public function getdatafrompointAction()
     {
-        $layer = json_decode($_GET['layer']);
+        $layer = json_decode($_GET['Layers']);
         $lat = floatval($_GET['lat']);
         $lng = floatval($_GET['lng']);
 
