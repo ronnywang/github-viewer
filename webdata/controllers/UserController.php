@@ -98,7 +98,7 @@ class UserController extends Pix_Controller
             }
             $ori_columns = json_decode($dataset->getEAV('columns'));
             $ori_values = json_decode($data_line->data);
-            if ($request_columns = explode(',', $_GET['columns'])) {
+            if (strlen($_GET['columns']) and $request_columns = explode(',', $_GET['columns'])) {
                 $columns = $values = array();
                 foreach ($ori_columns as $i => $column) {
                     if (in_array($column, $request_columns)) {
