@@ -290,9 +290,7 @@ main.show_map = function(){
 
   var click_event = function(e){
    $.get(click_url_set[current_tile] + '&lat=' + e.latLng.lat() + '&lng=' + e.latLng.lng(), function(ret){
-     var div_dom = $('<div></div>');
-     div_dom.css({'width': '100%', 'max-height':'250px', 'overflow': 'scroll'});
-     div_dom.empty();
+     var table_dom = $('<table class="table"></table>');
      if (ret.error) {
        console.log(ret.message);
        infowindow.setMap(null);
@@ -301,10 +299,10 @@ main.show_map = function(){
        for (var i = 0; i < ret.columns.length; i ++) {
          li_dom = $('<div></div>');
          li_dom.text(ret.columns[i] + ':' + ret.values[i]);
-         div_dom.append(li_dom);
+         table_dom.append($('<tr></tr>').append($('<td></td>').text(ret.columns[i])).append($('<td></td>').text(ret.values[i])));
        }
      }
-     infowindow.setContent($('<div></div>').append(div_dom).html());
+     infowindow.setContent($('<div></div>').append(table_dom).html());
      infowindow.open(map, marker);
      marker.setPosition(e.latLng);
      marker.setMap(map);
