@@ -34,11 +34,15 @@ class DataSetRow extends Pix_Table_Row
         // 給 ColorMap 專用的
         $objs = array();
         foreach (json_decode($this->getEAV('config'))->tabs as $id => $tab_info) {
+            if (!$columns = $tab_info->columns) {
+                $columns = array();
+            }
+
             $objs[] = array(
                 $id,
                 getenv('CDN_PREFIX') . '/wms?Request=GetMap&Layers=' . urlencode($this->getLayerID($id)),
                 getenv('CDN_PREFIX') . '/user/meter?Layers=' . urlencode($this->getLayerID($id)),
-                '/user/getdatafrompoint/?Layers=' . urlencode($this->getLayerID($id)),
+                '/user/getdatafrompoint/?Layers=' . urlencode($this->getLayerID($id)) . '&columns=' . urlencode(implode(',', $columns)),
             );
         }
         return json_encode($objs);

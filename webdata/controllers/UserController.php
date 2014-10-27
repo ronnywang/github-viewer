@@ -96,7 +96,22 @@ class UserController extends Pix_Controller
                 $values = array('找不到這筆資料', $row['id']);
                 return $this->json(array('error' => false, 'columns' => $columns, 'values' => $values));
             }
-            return $this->json(array('error' => false, 'columns' => json_decode($dataset->getEAV('columns')), 'values' => json_decode($data_line->data)));
+            $ori_columns = json_decode($dataset->getEAV('columns'));
+            $ori_values = json_decode($data_line->data);
+            if ($request_columns = explode(',', $_GET['columns'])) {
+                $columns = $values = array();
+                foreach ($ori_columns as $i => $column) {
+                    if (in_array($column, $request_columns)) {
+                        $columns[] = $column;
+                        $values[] = $ori_values[$i];
+                    }
+                }
+            } else {
+                $columns = $ori_columns;
+                $values = $ori_values;
+            }
+            
+            return $this->json(array('error' => false, 'columns' => $columns, 'values' => $values));
 
         } else {
             if (!$set = DataSet::find(intval($layer->set_id))) {
