@@ -1,5 +1,6 @@
 <?php
 
+include(__DIR__ . '/../init.inc.php');
 foreach (explode(' ', 'DataGeometry DataLine DataSet EAV FileBranchMap GeoDataMap GeoPoint ImportJob ImportJobStatus') as $table) {
     Pix_Table::getTable($table)->createTable();
 }
