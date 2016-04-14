@@ -1,0 +1,22 @@
+{
+  "name": "geojson_parse",
+  "version": "1.0.0",
+  "description": "GeoJSON parser",
+  "main": "geojson_parse.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ronnywang/github-viewer"
+  },
+  "author": "Ronny Wang",
+  "license": "BSD License",
+  "bugs": {
+    "url": "https://github.com/ronnywang/github-viewer/issues"
+  },
+  "homepage": "https://github.com/ronnywang/github-viewer",
+  "dependencies": {
+    "base64-stream": "^0.1.3"
+  }
+}
